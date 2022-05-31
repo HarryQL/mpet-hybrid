@@ -170,6 +170,133 @@ class muRfuncs():
         actR = 0.*y + 1.
         return muR, actR
 
+    def LiSVO1_ss(self, y, ybar, muR_ref, ISfuncs=None):
+        """
+        This function was obtained from Qiaohao Liang's fit of Gomadam et al. and Crespi et al.
+        discharge data (not 298K but at 37 celcius) of silver vanadium oxide (SVO) as cathode.
+        """
+        a = 0.170853327061503
+        c = 0.10575732541213
+        cc = 0.0325999695981445
+        d = -0.78083686412957
+        dd = -0.240750600055772
+        e = 2.45379781220411
+        ee = 0.772378929022569
+        f = -3.97315419342551
+        ff = -1.42183809509377
+        g = 2.18426393758425
+        gg = 1.64989436658455
+        h = 2.86023862411551
+        hh = -1.56778412967418
+        l = -2.38548221102615
+        ll = 2.31136343789118
+        m = -3.60162723777234
+        mm = -1.79871093593143
+        n = 1.31355252735059
+        nn = -2.31932170090989
+        o = 4.44535068501561
+        oo = 4.33115673161338
+        p = -2.61329695121938
+        pp = -1.74507099094851
+
+        OCV = +a*np.exp(-300*y) \
+        +(c+  d*y+  e*(y**2)+ f*(y**3)+  g*(y**4)+  h*(y**5)+  l*(y**6)+  m*(y**7)+  n*(y**8)+  o*(y**9)+  p*(y**10)) \
+        /(cc+dd*y+ee*(y**2)+ ff*(y**3)+ gg*(y**4)+ hh*(y**5)+ ll*(y**6)+ mm*(y**7)+ nn*(y**8)+ oo*(y**9)+ pp*(y**10))
+
+        # muR = self.get_muR_from_OCV(OCV, muR_ref)
+        EoKT = constants.e / (constants.k * 310.15)
+        muR = -EoKT*OCV + muR_ref
+        actR = None
+        return muR, actR
+
+    def LiSVO2_ss(self, y, ybar, muR_ref, ISfuncs=None):
+        """
+        This function was obtained from Qiaohao Liang's fit of Gomadam et al. and Crespi et al.
+        discharge data (not 298K but at 37 celcius) of silver vanadium oxide (SVO) as cathode.
+        """
+        b = -0.345789463427476
+        h = 0.322739984685649
+        hh= 0.130765470489961
+        k= -3.48317822510183
+        kk= -1.24602634371224
+        l= 7.34821589758667
+        ll=2.61168774930303
+        m=-4.27230319945918
+        mm=-1.51569561102223
+        s=0.0855649973938356
+        ss=0.0248816467247211
+
+        OCV = b*np.exp(-20*y) - 0.03*np.log(y/(1-y))  \
+            +(s+h*y + k*(y**2)+ l*(y**3)+ m*(y**4))/(ss+hh*y + kk*(y**2)+ ll*(y**3)+ mm*(y**4))
+
+        # muR = self.get_muR_from_OCV(OCV, muR_ref)
+        EoKT = constants.e / (constants.k * 310.15)
+        muR = -EoKT*OCV + muR_ref
+        actR = None
+        return muR, actR
+
+    def LiSVO3_ss(self, y, ybar, muR_ref, ISfuncs=None):
+        """
+        This function was obtained from Qiaohao Liang's fit of Gomadam et al. and Crespi et al.
+        discharge data (not 298K but at 37 celcius) of silver vanadium oxide (SVO) as cathode.
+        """
+        f1 = {}
+
+        f1['a']=-0.047489185122977
+        f1['g']=0.0123599861890936
+        f1['h']=-0.25166558033757
+        f1['hh']=-0.0715011406370388
+        f1['k']=-0.152170652149223
+        f1['kk']=-0.137700198508508
+        f1['l']=-0.310392350752184
+        f1['ll']=0.442857514106943
+        f1['m']=1.50089313720958
+        f1['mm']=-1.12169549148466
+        f1['n']=1.37431350316364
+        f1['nn']=2.50950767275235
+        f1['oo']=-0.711884620333217
+        f1['s']=0.106948631238828
+        f1['ss']=0.0331359792492862
+
+        V1 = f1['a']*np.exp(-40*y)- f1['g']*np.log(y/(1-y)) \
+        +(f1['s']+f1['h']*y + f1['k']*y**2+ f1['l']*y**3+ f1['m']*y**4+f1['n']*y**5)/(f1['ss']+f1['hh']*y + f1['kk']*y**2+ f1['ll']*y**3+ f1['mm']*y**4+ f1['nn']*y**5+ f1['oo']*y**6)
+
+
+        f2 = {}
+
+        f2['a']=0.947147650948782
+        f2['h']=-3.32323207628614
+        f2['hh']=-1.27979209447358
+        f2['k']=8.38390992823025
+        f2['kk']=3.63929901877949
+        f2['l']=-8.98807206208452
+        f2['ll']=-5.07950982909034
+        f2['m']=3.4599500697743
+        f2['mm']=4.00621320437629
+        f2['nn']=-2.07896572084748
+        f2['oo']=0.626354842857545
+        f2['s']=0.485746495687564
+        f2['ss']=0.174658368790558
+
+        V2 = f2['a']*np.exp(-40*y) \
+        +(f2['s']+f2['h']*y + f2['k']*y**2+ f2['l']*y**3+ f2['m']*y**4)/(f2['ss']+f2['hh']*y + f2['kk']*y**2+f2['ll']*y**3+ f2['mm']*y**4+ f2['nn']*y**5+ f2['oo']*y**6)
+
+        OCV = []
+        for i in np.arange(len(y)):
+            if 0<=y[i]<=0.3480:
+                OCV.append(V1[i])
+            elif 0.3480<y[i]<=0.5073:
+                OCV.append((V1[i]+V2[i])/2)
+            else:
+                OCV.append(V2[i])
+        OCV = np.array(OCV)
+
+        # muR = self.get_muR_from_OCV(OCV, muR_ref)
+        EoKT = constants.e / (constants.k * 310.15)
+        muR = -EoKT*OCV + muR_ref
+        actR = None
+        return muR, actR
+
     def NCA_ss1(self, y, ybar, muR_ref, ISfuncs=None):
         """
         This function was obtained from Dan Cogswell's fit of Samsung
@@ -233,6 +360,7 @@ class muRfuncs():
         else:
             muR = T*np.log(y/(1-y))
         return muR
+
 
     def reg_sln(self, y, Omga, ISfuncs=None):
         """ Helper function """
@@ -366,6 +494,118 @@ class muRfuncs():
             elif mod2var:
                 muR_nh = (0*y[0], 0*y[1])
         return muR_nh
+
+    def LiAgO(self, y, ybar, muR_ref, ISfuncs=None):
+        """ Harry QL """
+        muRtheta = -self.eokT*3.24
+        muRhomog = self.reg_sln(y, self.get_trode_param("Omega_a"), ISfuncs)
+        muR = muRhomog
+        actR = np.exp(muR/self.T)
+        muR += muRtheta + muR_ref
+        return muR, actR
+
+    def LiAgO_2(self, y, ybar, muR_ref, ISfuncs=None):
+        """ Harry QL """
+        muRtheta = -self.eokT*3.24
+        muR_IS = self.ideal_sln(y, ISfuncs=ISfuncs)
+
+        a = 5.691538114229498e-21
+        b = -4.002544682702823e-21
+        c = -1.3141997937601257e-23
+        d = 2.096566385115125e-21
+        e = -6.776564541404943e-21
+        f = -2.4558853747067674e-21
+        g = 3.454147920069218e-21
+        h = 3.297723088617093e-23
+        k = 9.037289447783597e-22
+        l = 4.655679261427252e-21
+        m = -5.3657816522574435e-21
+        n = -4.02578357564957e-21
+        o = 3.825245271957496e-21
+
+
+        muR_enthalpy = +a+ b*y \
+        +(c + d*y+ e*y**2+f*y**3+g*y**4+o*y**5)/(h + k*y+ l*y**2+m*y**3+n*y**4+o*y**5)
+
+        muR = muR_IS + muR_enthalpy
+        actR = np.exp(muR/self.T)
+        muR += muRtheta + muR_ref
+        return muR, actR
+
+    def LiAgO_3(self, y, ybar, muR_ref, ISfuncs=None):
+        """ Harry QL """
+        muRtheta = -self.eokT*3.24
+        muR_IS = self.ideal_sln(y, ISfuncs=ISfuncs)
+
+        a = 1.083848158217673e-20
+        b = -1.0654967480281273e-20
+        c = 7.619626994372853e-23
+        d = -5.651892865829598e-22
+        e = -8.313510030285637e-21
+        f = -6.360959351649524e-22
+        g = -2.0413762015510175e-21
+        h = 3.1774382973859517e-23
+        k = 1.0902536883053085e-20
+        l = -8.933872791967338e-21
+        m = -4.675144814646792e-21
+        n = -2.0583125834760178e-21
+        o = 6.520098019410268e-21
+
+
+        muR_enthalpy = +a+ b*y \
+        +(c + d*y+ e*y**2+f*y**3+g*y**4+o*y**5)/(h + k*y+ l*y**2+m*y**3+n*y**4+o*y**5)
+
+        muR = muR_IS + muR_enthalpy
+        actR = np.exp(muR/self.T)
+        muR += muRtheta + muR_ref
+        return muR, actR
+
+
+    def LiAgO_4(self, y, ybar, muR_ref, ISfuncs=None):
+        """ Harry QL """
+        muRtheta = -self.eokT*3.24
+        muR_IS = self.ideal_sln(y, ISfuncs=ISfuncs)
+
+        a = 2.0735791226520676e-20
+        b = -1.6734678205954512e-20
+        d = -9.91957479253568e-21
+        e = 5.885516306832164e-21
+        f = 5.091767616045285e-21
+        g = -6.4404225510649466e-21
+        h = 9.615670039822943e-24
+        k = 5.763228959625533e-21
+        l = -7.322703230561445e-21
+        m = 3.431112316409551e-21
+        n = -5.143230391068749e-21
+        o = 4.447689879016667e-21
+        p = 3.569795901310487e-21
+
+
+        muR_enthalpy = +a+ b*y \
+            +(d*y+ e*y**2+f*y**3+g*y**4+o*y**5)/(h + k*y+ l*y**2+m*y**3+n*y**4+p*y**5)
+
+        muR = muR_IS + muR_enthalpy
+        actR = np.exp(muR/self.T)
+        muR += muRtheta + muR_ref
+        return muR, actR
+
+    def LiAgO_5(self, y, ybar, muR_ref, ISfuncs=None):
+        """ Harry QL """
+        muRtheta = -self.eokT*3.24
+        muR_IS = self.ideal_sln(y, ISfuncs=ISfuncs)
+
+        Omga = self.get_trode_param("Omega_a")
+        Omgb = self.get_trode_param("Omega_b")
+        Omgc = self.get_trode_param("Omega_c")
+
+        muR_enthalpy = Omga*(1-1.4*y) + Omgb*(y**2) + Omgc*(y**3)
+
+        muR = muR_IS + muR_enthalpy
+        actR = np.exp(muR/self.T)
+        muR += muRtheta + muR_ref
+        return muR, actR
+
+
 
     def LiFePO4(self, y, ybar, muR_ref, ISfuncs=None):
         """ Bai, Cogswell, Bazant 2011 """
