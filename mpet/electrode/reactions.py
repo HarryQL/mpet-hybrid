@@ -36,6 +36,20 @@ def BV_raw(eta, c_sld, c_lyte, k0, E_A, T, act_R=None,
     Rate = ecd * np.exp(-E_A/T + E_A/1) * (np.exp(-alpha*eta/T) - np.exp((1-alpha)*eta/T))
     return Rate
 
+def BV_AgO(eta, c_sld, c_lyte, k0, E_A, T, act_R=None,
+           act_lyte=None, lmbda=None, alpha=None):
+    ecd = k0
+    Rate = ecd * (1-c_sld)**2 * (np.exp(-alpha*eta/T) - np.exp((1-alpha)*eta/T))
+    return Rate
+
+
+def BV_mod_rate(eta, c_sld, c_lyte, k0, E_A, T, act_R=None,
+           act_lyte=None, lmbda=None, alpha=None):
+    ecd = 10**(-2)
+    ecd_mod = ecd*( (18*(1/3-c_sld)**2 + 1) * (c_sld<=0.33) + 100*(c_sld>0.33)  )
+    Rate = ecd_mod * np.exp(-E_A/T + E_A/1) * (np.exp(-alpha*eta/T) - np.exp((1-alpha)*eta/T))
+    return Rate
+
 
 def BV_mod01(eta, c_sld, c_lyte, k0, E_A, T, act_R=None,
              act_lyte=None, lmbda=None, alpha=None):
