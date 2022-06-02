@@ -185,6 +185,8 @@ class Mod2var(dae.daeModel):
         eq1.Residual = self.c1.dt(0) - self.get_trode_param("delta_L")*Rxn1[0]
         eq2.Residual = self.c2.dt(0) - self.get_trode_param("delta_L")*Rxn2[0]
 
+    def sld_dynamics_0D2var_SVO_hybrid(self, c1, c2, muO, act_lyte, ISfuncs, noises):
+
     def sld_dynamics_1D2var(self, c1, c2, muO, act_lyte, ISfuncs, noises):
         N = self.get_trode_param("N")
         T = self.config["T"]
