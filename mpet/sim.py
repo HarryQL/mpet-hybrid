@@ -89,6 +89,7 @@ class SimMPET(dae.daeSimulation):
                         elif solidType in constants.two_var_types:
                             part.c1bar.SetInitialGuess(cs0)
                             part.c2bar.SetInitialGuess(cs0)
+                            # potentially need to change
                             part.cbar.SetInitialGuess(cs0)
                             epsrnd = 0.0001
                             rnd1 = epsrnd*(np.random.rand(Nij) - 0.5)
