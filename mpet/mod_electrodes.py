@@ -131,6 +131,7 @@ class Mod2var(dae.daeModel):
             eq2.Residual -= self.c2(k) * volfrac_vec[k]
         eq = self.CreateEquation("cbar")
         eq.Residual = self.cbar() - .5*(self.c1bar() + self.c2bar())
+        # eq.Residual = self.cbar() - 0.333*(self.c1bar() + 2*self.c2bar())
 
         # Define average rate of filling of particle
         eq = self.CreateEquation("dcbardt")
