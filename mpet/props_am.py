@@ -632,6 +632,13 @@ class muRfuncs():
         muR2 += muRtheta + muR_ref
         return (muR1, muR2), (actR1, actR2)
 
+    def SVO_hybrid(self, y, ybar, muR_ref, ISfuncs=(None, None)):
+
+
+
+
+        return (muR1, muR2), (actR1, actR2)
+
     def LiC6_1param(self, y, ybar, muR_ref, ISfuncs=None):
         muRtheta = -self.eokT*0.12
         muRhomog = self.graphite_1param_homog_3(
