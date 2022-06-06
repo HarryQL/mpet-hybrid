@@ -209,25 +209,40 @@ class muRfuncs():
         actR = None
         return muR, actR
 
-    def LiSVO2_ss(self, y, ybar, muR_ref, ISfuncs=None):
+    def LiVO1_ss(self, y, ybar, muR_ref, ISfuncs=None):
         """
-        This function was obtained from Qiaohao Liang's fit of Gomadam et al. and Crespi et al.
-        discharge data (not 298K but at 37 celcius) of silver vanadium oxide (SVO) as cathode.
+        Vanadium reduction OCV
         """
-        b = -0.345789463427476
-        h = 0.322739984685649
-        hh= 0.130765470489961
-        k= -3.48317822510183
-        kk= -1.24602634371224
-        l= 7.34821589758667
-        ll=2.61168774930303
-        m=-4.27230319945918
-        mm=-1.51569561102223
-        s=0.0855649973938356
-        ss=0.0248816467247211
 
-        OCV = b*np.exp(-20*y) - 0.03*np.log(y/(1-y))  \
-            +(s+h*y + k*(y**2)+ l*(y**3)+ m*(y**4))/(ss+hh*y + kk*(y**2)+ ll*(y**3)+ mm*(y**4))
+        a = 0.777202437736476
+        b = 0.474744924663168
+        d = 0.689210000197934
+        dd = 0.231386236456565
+        e = 0.900086230881169
+        ee = 1.38659662497403
+        f = 2.19792050603498
+        ff = -0.570214017959082
+        g = -0.247566668286967
+        gg = 0.610299873935577
+        h = -0.828002605941331
+        hh = 0.882567947451821
+        k = 0.424473584337631
+        kk = 0.0423284925890506
+        l = 0.828247009245531
+        ll = -0.547376068752914
+        m = 0.553745857338048
+        mm = -0.94353674601898
+        n = 0.916422586764535
+        nn = 0.118145979574833
+        o = -0.440939258125685
+        oo = 1.01429721903779
+        p = -0.468561937977976
+        pp = 1.43586896994767
+
+        OCV = +a +b*np.exp(-300*x)  \
+              +(d + e*x+ f*x**2+g*x**3+h*x**4+k*x**5+l*x**6+m*x**7+n*x**8+o*x**9+p*x**10) \
+              /(dd + ee*x+ ff*x**2+gg*x**3+hh*x**4+kk*x**5+ll*x**6+mm*x**7+nn*x**8+oo*x**9+pp*x**10)
+
 
         # muR = self.get_muR_from_OCV(OCV, muR_ref)
         EoKT = constants.e / (constants.k * 310.15)
@@ -235,67 +250,7 @@ class muRfuncs():
         actR = None
         return muR, actR
 
-    def LiSVO3_ss(self, y, ybar, muR_ref, ISfuncs=None):
-        """
-        This function was obtained from Qiaohao Liang's fit of Gomadam et al. and Crespi et al.
-        discharge data (not 298K but at 37 celcius) of silver vanadium oxide (SVO) as cathode.
-        """
-        f1 = {}
 
-        f1['a']=-0.047489185122977
-        f1['g']=0.0123599861890936
-        f1['h']=-0.25166558033757
-        f1['hh']=-0.0715011406370388
-        f1['k']=-0.152170652149223
-        f1['kk']=-0.137700198508508
-        f1['l']=-0.310392350752184
-        f1['ll']=0.442857514106943
-        f1['m']=1.50089313720958
-        f1['mm']=-1.12169549148466
-        f1['n']=1.37431350316364
-        f1['nn']=2.50950767275235
-        f1['oo']=-0.711884620333217
-        f1['s']=0.106948631238828
-        f1['ss']=0.0331359792492862
-
-        V1 = f1['a']*np.exp(-40*y)- f1['g']*np.log(y/(1-y)) \
-        +(f1['s']+f1['h']*y + f1['k']*y**2+ f1['l']*y**3+ f1['m']*y**4+f1['n']*y**5)/(f1['ss']+f1['hh']*y + f1['kk']*y**2+ f1['ll']*y**3+ f1['mm']*y**4+ f1['nn']*y**5+ f1['oo']*y**6)
-
-
-        f2 = {}
-
-        f2['a']=0.947147650948782
-        f2['h']=-3.32323207628614
-        f2['hh']=-1.27979209447358
-        f2['k']=8.38390992823025
-        f2['kk']=3.63929901877949
-        f2['l']=-8.98807206208452
-        f2['ll']=-5.07950982909034
-        f2['m']=3.4599500697743
-        f2['mm']=4.00621320437629
-        f2['nn']=-2.07896572084748
-        f2['oo']=0.626354842857545
-        f2['s']=0.485746495687564
-        f2['ss']=0.174658368790558
-
-        V2 = f2['a']*np.exp(-40*y) \
-        +(f2['s']+f2['h']*y + f2['k']*y**2+ f2['l']*y**3+ f2['m']*y**4)/(f2['ss']+f2['hh']*y + f2['kk']*y**2+f2['ll']*y**3+ f2['mm']*y**4+ f2['nn']*y**5+ f2['oo']*y**6)
-
-        OCV = []
-        for i in np.arange(len(y)):
-            if 0<=y[i]<=0.3480:
-                OCV.append(V1[i])
-            elif 0.3480<y[i]<=0.5073:
-                OCV.append((V1[i]+V2[i])/2)
-            else:
-                OCV.append(V2[i])
-        OCV = np.array(OCV)
-
-        # muR = self.get_muR_from_OCV(OCV, muR_ref)
-        EoKT = constants.e / (constants.k * 310.15)
-        muR = -EoKT*OCV + muR_ref
-        actR = None
-        return muR, actR
 
     def NCA_ss1(self, y, ybar, muR_ref, ISfuncs=None):
         """
@@ -633,11 +588,21 @@ class muRfuncs():
         return (muR1, muR2), (actR1, actR2)
 
     def SVO_hybrid(self, y, ybar, muR_ref, ISfuncs=(None, None)):
+        """Harry 2022 Medtronic"""
 
+        y1, y2 = y
+        # muRtheta2 = -self.eokT*2.59
 
+        muR1homog, actR1 = LiAgO(y1, ybar, muR_ref, ISfuncs=None)
+
+        muR2, actR2 = LiVO1_ss(y2, ybar, muR_ref, ISfuncs=None)
 
 
         return (muR1, muR2), (actR1, actR2)
+
+
+
+
 
     def LiC6_1param(self, y, ybar, muR_ref, ISfuncs=None):
         muRtheta = -self.eokT*0.12
