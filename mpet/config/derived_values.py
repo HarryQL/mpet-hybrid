@@ -216,7 +216,8 @@ class DerivedValues:
         if self.config[trode, 'type'] in constants.one_var_types:
             prefac = 1
         elif self.config[trode, 'type'] in constants.two_var_types:
-            prefac = .5
+            prefac = 1/3
+            # prefac = .5
         return prefac * self.config[trode, 'csmax']
 
     def muR_ref(self, trode):
