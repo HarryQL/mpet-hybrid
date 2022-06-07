@@ -42,10 +42,10 @@ def BV_AgO(eta, c_sld, c_lyte, k0, E_A, T, act_R=None,
     Rate = k0 * (1-c_sld)**2 * (np.exp(-alpha*eta/T) - np.exp((1-alpha)*eta/T))
     return Rate
 
-def BV_SVO_hybrid(eta1, eta2, c_sld, c_lyte, k0, k1, E_A, T, act_R=None,
+def BV_SVO_hybrid(eta1, eta2, c_sld1, c_sld2, c_lyte, k0, k1, E_A, T, act_R=None,
            act_lyte=None, lmbda=None, alpha=None):
 
-    Rate1 = k0 * (1-c_sld)**2 * (np.exp(-alpha*eta1/T) - np.exp((1-alpha)*eta1/T))
+    Rate1 = k0 * (1-c_sld1)**2 * (np.exp(-alpha*eta1/T) - np.exp((1-alpha)*eta1/T))
     Rate2 = k1  * (np.exp(-alpha*eta2/T) - np.exp((1-alpha)*eta2/T))
     return Rate1, Rate2
 

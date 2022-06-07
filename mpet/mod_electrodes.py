@@ -149,6 +149,8 @@ class Mod2var(dae.daeModel):
         elif self.get_trode_param("type") in ["homog2", "homog2_sdn"]:
             # Equations for 0D particles of 1 field variables
             self.sld_dynamics_0D2var(c1, c2, mu_O, act_lyte, ISfuncs, noises)
+        elif self.get_trode_param("type") in ["homog2_hybrid"]:
+            self.sld_dynamics_0D2var_SVO_hybrid(c1, c2, mu_O, act_lyte, ISfuncs, noises)
 
         for eq in self.Equations:
             eq.CheckUnitsConsistency = False
@@ -187,6 +189,32 @@ class Mod2var(dae.daeModel):
         eq2.Residual = self.c2.dt(0) - self.get_trode_param("delta_L")*Rxn2[0]
 
     def sld_dynamics_0D2var_SVO_hybrid(self, c1, c2, muO, act_lyte, ISfuncs, noises):
+        T = self.config["T"]
+        c1_surf = c1
+        c2_surf = c2
+        (mu1R_surf, mu2R_surf), (act1R_surf, act2R_surf) = calc_muR(
+            (c1_surf, c2_surf), (self.c1bar(), self.c2bar()), self.config,
+            self.trode, self.ind, ISfuncs)
+        eta1 = calc_eta(mu1R_surf, muO)
+        eta2 = calc_eta(mu2R_surf, muO)
+        eta1_eff = eta1 + self.Rxn1()*self.get_trode_param("Rfilm")
+        eta2_eff = eta2 + self.Rxn2()*self.get_trode_param("Rfilm")
+        noise1, noise2 = noises
+        if self.get_trode_param("noise"):
+            eta1_eff += noise1(dae.Time().Value)
+            eta2_eff += noise2(dae.Time().Value)
+        Rxn1, Rxn2 = self.calc_rxn_rate(eta1_eff, eta2_eff, c1_surf, c2_surf, self.c_lyte(), self.get_trode_param("k0"),self.get_trode_param("k1"),
+            self.get_trode_param("E_A"), T, act1R_surf, act_lyte,
+            self.get_trode_param("lambda"), self.get_trode_param("alpha"))
+        eq1 = self.CreateEquation("Rxn1")
+        eq2 = self.CreateEquation("Rxn2")
+        eq1.Residual = self.Rxn1() - Rxn1[0]
+        eq2.Residual = self.Rxn2() - Rxn2[0]
+
+        eq1 = self.CreateEquation("dc1sdt")
+        eq2 = self.CreateEquation("dc2sdt")
+        eq1.Residual = self.c1.dt(0) - self.get_trode_param("delta_L")*Rxn1[0]
+        eq2.Residual = self.c2.dt(0) - self.get_trode_param("delta_L")*Rxn2[0]
 
     def sld_dynamics_1D2var(self, c1, c2, muO, act_lyte, ISfuncs, noises):
         N = self.get_trode_param("N")
