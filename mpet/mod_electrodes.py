@@ -130,14 +130,16 @@ class Mod2var(dae.daeModel):
             eq1.Residual -= self.c1(k) * volfrac_vec[k]
             eq2.Residual -= self.c2(k) * volfrac_vec[k]
         eq = self.CreateEquation("cbar")
-        eq.Residual = self.cbar() - .5*(self.c1bar() + self.c2bar())
-        # eq.Residual = self.cbar() - 0.333*(self.c1bar() + 2*self.c2bar())
+        # eq.Residual = self.cbar() - .5*(self.c1bar() + self.c2bar())
+        eq.Residual = self.cbar() - (1/3)*(self.c1bar() + 2*self.c2bar())
 
         # Define average rate of filling of particle
         eq = self.CreateEquation("dcbardt")
         eq.Residual = self.dcbardt()
         for k in range(N):
-            eq.Residual -= .5*(self.c1.dt(k) + self.c2.dt(k)) * volfrac_vec[k]
+            # eq.Residual -= .5*(self.c1.dt(k) + self.c2.dt(k)) * volfrac_vec[k]
+            eq.Residual -= (1/3)*(self.c1.dt(k) + 2*self.c2.dt(k)) * volfrac_vec[k]
+
 
         c1 = np.empty(N, dtype=object)
         c2 = np.empty(N, dtype=object)
