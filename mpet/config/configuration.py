@@ -617,7 +617,7 @@ class Config:
                 psd_num = np.ceil(raw / solidDisc).astype(int) + 1
                 psd_len = solidDisc * (psd_num - 1)
             # For homogeneous particles (only one 'volume' per particle)
-        elif solidType in ['homog', 'homog_sdn', 'homog2', 'homog2_sdn','homog2_hybrid']:
+            elif solidType in ['homog', 'homog_sdn', 'homog2', 'homog2_sdn','homog2_hybrid']:
                 # Each particle is only one volume
                 psd_num = np.ones(raw.shape, dtype=np.int)
                 # The lengths are given by the original length distr.
