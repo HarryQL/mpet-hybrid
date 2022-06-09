@@ -203,10 +203,11 @@ class muRfuncs():
         +(c+  d*y+  e*(y**2)+ f*(y**3)+  g*(y**4)+  h*(y**5)+  l*(y**6)+  m*(y**7)+  n*(y**8)+  o*(y**9)+  p*(y**10)) \
         /(cc+dd*y+ee*(y**2)+ ff*(y**3)+ gg*(y**4)+ hh*(y**5)+ ll*(y**6)+ mm*(y**7)+ nn*(y**8)+ oo*(y**9)+ pp*(y**10))
 
-        # muR = self.get_muR_from_OCV(OCV, muR_ref)
-        EoKT = constants.e / (constants.k * 310.15)
-        muR = -EoKT*OCV + muR_ref
+        muR = self.get_muR_from_OCV(OCV, muR_ref)
         actR = None
+        # EoKT = constants.e / (constants.k * 310.15)
+        # muR = -EoKT*OCV + muR_ref
+        # actR = None
         return muR, actR
 
     def LiVO1_ss(self, y, ybar, muR_ref, ISfuncs=None):
@@ -239,15 +240,16 @@ class muRfuncs():
         p = -0.468561937977976
         pp = 1.43586896994767
 
-        OCV = +a +b*np.exp(-300*x)  \
-              +(d + e*x+ f*x**2+g*x**3+h*x**4+k*x**5+l*x**6+m*x**7+n*x**8+o*x**9+p*x**10) \
-              /(dd + ee*x+ ff*x**2+gg*x**3+hh*x**4+kk*x**5+ll*x**6+mm*x**7+nn*x**8+oo*x**9+pp*x**10)
+        OCV = +a +b*np.exp(-300*y)  \
+              +(d + e*y+ f*y**2+g*y**3+h*y**4+k*y**5+l*y**6+m*y**7+n*y**8+o*y**9+p*y**10) \
+              /(dd + ee*y+ ff*y**2+gg*y**3+hh*y**4+kk*y**5+ll*y**6+mm*y**7+nn*y**8+oo*y**9+pp*y**10)
 
 
-        # muR = self.get_muR_from_OCV(OCV, muR_ref)
-        EoKT = constants.e / (constants.k * 310.15)
-        muR = -EoKT*OCV + muR_ref
+        muR = self.get_muR_from_OCV(OCV, muR_ref)
         actR = None
+        # EoKT = constants.e / (constants.k * 310.15)
+        # muR = -EoKT*OCV + muR_ref
+        # actR = None
         return muR, actR
 
 
@@ -593,9 +595,9 @@ class muRfuncs():
         y1, y2 = y
         # muRtheta2 = -self.eokT*2.59
 
-        muR1homog, actR1 = LiAgO(y1, ybar, muR_ref, ISfuncs=None)
+        muR1homog, actR1 = self.LiAgO(y1, ybar, muR_ref, ISfuncs=None)
 
-        muR2, actR2 = LiVO1_ss(y2, ybar, muR_ref, ISfuncs=None)
+        muR2, actR2 = self.LiVO1_ss(y2, ybar, muR_ref, ISfuncs=None)
 
 
         return (muR1, muR2), (actR1, actR2)
