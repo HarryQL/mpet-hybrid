@@ -206,17 +206,20 @@ class Mod2var(dae.daeModel):
             eta1_eff += noise1(dae.Time().Value)
             eta2_eff += noise2(dae.Time().Value)
         Rxn1, Rxn2 = self.calc_rxn_rate(eta1_eff, eta2_eff, c1_surf, c2_surf, self.c_lyte(), self.get_trode_param("k0"),self.get_trode_param("k1"),
-            self.get_trode_param("E_A"), T, act1R_surf, act_lyte,
-            self.get_trode_param("lambda"), self.get_trode_param("alpha"))
+            self.get_trode_param("E_A"), T, act1R_surf, act_lyte, self.get_trode_param("lambda"), self.get_trode_param("alpha"))
         eq1 = self.CreateEquation("Rxn1")
         eq2 = self.CreateEquation("Rxn2")
         eq1.Residual = self.Rxn1() - Rxn1[0]
-        eq2.Residual = self.Rxn2() - Rxn2[0]
+        # eq2.Residual = self.Rxn2() - Rxn2[0]
+        eq2.Residual = self.Rxn2() - 0.5*Rxn2[0]
 
         eq1 = self.CreateEquation("dc1sdt")
         eq2 = self.CreateEquation("dc2sdt")
         eq1.Residual = self.c1.dt(0) - self.get_trode_param("delta_L")*Rxn1[0]
-        eq2.Residual = self.c2.dt(0) - self.get_trode_param("delta_L")*Rxn2[0]
+        # eq2.Residual = self.c2.dt(0) - self.get_trode_param("delta_L")*Rxn2[0]
+        eq2.Residual = self.c2.dt(0) - 0.5*self.get_trode_param("delta_L")*Rxn2[0]
+
+
 
     def sld_dynamics_1D2var(self, c1, c2, muO, act_lyte, ISfuncs, noises):
         N = self.get_trode_param("N")

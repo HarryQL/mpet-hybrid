@@ -252,6 +252,24 @@ class muRfuncs():
         # actR = None
         return muR, actR
 
+    def LiVO2_ss(self, y, ybar, muR_ref, ISfuncs=None):
+        """
+        Vanadium reduction OCV from Gomadam
+        """
+
+        OCV = +0.823078467*np.exp(-20*(4*y)) \
+            +(3.176921533+5.802419895*((4*y)**2)+0.191983977*((4*y)**4)-0.16084978*((4*y)**6)+0.00900142*((4*y)**8)) \
+            /(1+2.462745769*((4*y)**2)-0.024605961*((4*y)**4)-0.04188333*((4*y)**6)+0.001617672*((4*y)**8)+0.000062746*((4*y)**10))
+
+
+
+        muR = self.get_muR_from_OCV(OCV, muR_ref)
+        actR = None
+        # EoKT = constants.e / (constants.k * 310.15)
+        # muR = -EoKT*OCV + muR_ref
+        # actR = None
+        return muR, actR
+
 
 
     def NCA_ss1(self, y, ybar, muR_ref, ISfuncs=None):
@@ -461,90 +479,6 @@ class muRfuncs():
         muR += muRtheta + muR_ref
         return muR, actR
 
-    def LiAgO_2(self, y, ybar, muR_ref, ISfuncs=None):
-        """ Harry QL """
-        muRtheta = -self.eokT*3.24
-        muR_IS = self.ideal_sln(y, ISfuncs=ISfuncs)
-
-        a = 5.691538114229498e-21
-        b = -4.002544682702823e-21
-        c = -1.3141997937601257e-23
-        d = 2.096566385115125e-21
-        e = -6.776564541404943e-21
-        f = -2.4558853747067674e-21
-        g = 3.454147920069218e-21
-        h = 3.297723088617093e-23
-        k = 9.037289447783597e-22
-        l = 4.655679261427252e-21
-        m = -5.3657816522574435e-21
-        n = -4.02578357564957e-21
-        o = 3.825245271957496e-21
-
-
-        muR_enthalpy = +a+ b*y \
-        +(c + d*y+ e*y**2+f*y**3+g*y**4+o*y**5)/(h + k*y+ l*y**2+m*y**3+n*y**4+o*y**5)
-
-        muR = muR_IS + muR_enthalpy
-        actR = np.exp(muR/self.T)
-        muR += muRtheta + muR_ref
-        return muR, actR
-
-    def LiAgO_3(self, y, ybar, muR_ref, ISfuncs=None):
-        """ Harry QL """
-        muRtheta = -self.eokT*3.24
-        muR_IS = self.ideal_sln(y, ISfuncs=ISfuncs)
-
-        a = 1.083848158217673e-20
-        b = -1.0654967480281273e-20
-        c = 7.619626994372853e-23
-        d = -5.651892865829598e-22
-        e = -8.313510030285637e-21
-        f = -6.360959351649524e-22
-        g = -2.0413762015510175e-21
-        h = 3.1774382973859517e-23
-        k = 1.0902536883053085e-20
-        l = -8.933872791967338e-21
-        m = -4.675144814646792e-21
-        n = -2.0583125834760178e-21
-        o = 6.520098019410268e-21
-
-
-        muR_enthalpy = +a+ b*y \
-        +(c + d*y+ e*y**2+f*y**3+g*y**4+o*y**5)/(h + k*y+ l*y**2+m*y**3+n*y**4+o*y**5)
-
-        muR = muR_IS + muR_enthalpy
-        actR = np.exp(muR/self.T)
-        muR += muRtheta + muR_ref
-        return muR, actR
-
-
-    def LiAgO_4(self, y, ybar, muR_ref, ISfuncs=None):
-        """ Harry QL """
-        muRtheta = -self.eokT*3.24
-        muR_IS = self.ideal_sln(y, ISfuncs=ISfuncs)
-
-        a = 2.0735791226520676e-20
-        b = -1.6734678205954512e-20
-        d = -9.91957479253568e-21
-        e = 5.885516306832164e-21
-        f = 5.091767616045285e-21
-        g = -6.4404225510649466e-21
-        h = 9.615670039822943e-24
-        k = 5.763228959625533e-21
-        l = -7.322703230561445e-21
-        m = 3.431112316409551e-21
-        n = -5.143230391068749e-21
-        o = 4.447689879016667e-21
-        p = 3.569795901310487e-21
-
-
-        muR_enthalpy = +a+ b*y \
-            +(d*y+ e*y**2+f*y**3+g*y**4+o*y**5)/(h + k*y+ l*y**2+m*y**3+n*y**4+p*y**5)
-
-        muR = muR_IS + muR_enthalpy
-        actR = np.exp(muR/self.T)
-        muR += muRtheta + muR_ref
-        return muR, actR
 
     def LiAgO_5(self, y, ybar, muR_ref, ISfuncs=None):
         """ Harry QL """
@@ -556,6 +490,24 @@ class muRfuncs():
         Omgc = self.get_trode_param("Omega_c")
 
         muR_enthalpy = Omga*(1-1.4*y) + Omgb*(y**2) + Omgc*(y**3)
+
+        muR = muR_IS + muR_enthalpy
+        actR = np.exp(muR/self.T)
+        muR += muRtheta + muR_ref
+        return muR, actR
+
+    def LiAgO_6(self, y, ybar, muR_ref, ISfuncs=None):
+        """ Harry QL """
+        muRtheta = -self.eokT*3.24
+        muR_IS = self.ideal_sln(y, ISfuncs=ISfuncs)
+
+        Omga = self.get_trode_param("Omega_a")
+        Omgb = self.get_trode_param("Omega_b")
+        Omgc = self.get_trode_param("Omega_c")
+        Omgd = self.get_trode_param("Omega_d")
+
+
+        muR_enthalpy = Omga + Omgb*y + Omgc*(y**1.5) + Omgd*(y**2)
 
         muR = muR_IS + muR_enthalpy
         actR = np.exp(muR/self.T)
@@ -595,12 +547,12 @@ class muRfuncs():
         y1, y2 = y
         # muRtheta2 = -self.eokT*2.59
 
-        muR1homog, actR1 = self.LiAgO(y1, ybar, muR_ref, ISfuncs=None)
+        muR1homog, actR1 = self.LiAgO_6(y1, ybar, muR_ref, ISfuncs=None)
 
-        muR2, actR2 = self.LiVO1_ss(y2, ybar, muR_ref, ISfuncs=None)
+        muR2, actR2 = self.LiVO2_ss(y2, ybar, muR_ref, ISfuncs=None)
 
 
-        return (muR1, muR2), (actR1, actR2)
+        return (muR1homog, muR2), (actR1, actR2)
 
 
 

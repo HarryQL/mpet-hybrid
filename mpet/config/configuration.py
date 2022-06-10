@@ -494,7 +494,7 @@ class Config:
 
             self[trode, 'lambda'] = self[trode, 'lambda'] / kT
             self[trode, 'B'] = self[trode, 'B'] / (kT * constants.N_A * self[trode, 'cs_ref'])
-            for param in ['Omega_a', 'Omega_b', 'Omega_c', 'EvdW']:
+            for param in ['Omega_a', 'Omega_b', 'Omega_c', 'Omega_d','EvdW']:
                 value = self[trode, param]
                 if value is not None:
                     self[trode, param] = value / kT
@@ -726,6 +726,9 @@ class Config:
                     else:
                         # just use global value
                         self[trode, 'indvPart']['Omega_a'][i, j] = self[trode, 'Omega_a']
+                        # self[trode, 'indvPart']['Omega_b'][i, j] = self[trode, 'Omega_b']
+                        # self[trode, 'indvPart']['Omega_c'][i, j] = self[trode, 'Omega_c']
+                        # self[trode, 'indvPart']['Omega_d'][i, j] = self[trode, 'Omega_d']
 
         # store which items are defined per particle, so in the future they are retrieved
         # per particle instead of from the values per electrode
