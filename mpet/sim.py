@@ -150,6 +150,9 @@ class SimMPET(dae.daeSimulation):
                         solidType = self.config[tr, "type"]
                         partStr = "partTrode{l}vol{i}part{j}_".format(
                             l=tr, i=i, j=j)
+                            # part2Str = "partTrode2{l}vol{i}part{j}_".format(
+                            #     l=tr, i=i, j=j)
+
 
                         # Set the inlet port variables for each particle
                         part.c_lyte.SetInitialGuess(data["c_lyte_" + tr][-1,i])

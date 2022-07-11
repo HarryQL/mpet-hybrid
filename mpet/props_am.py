@@ -514,6 +514,23 @@ class muRfuncs():
         muR += muRtheta + muR_ref
         return muR, actR
 
+    def LiAgO_7(self, y, ybar, muR_ref, ISfuncs=None):
+        """ Harry QL """
+        muRtheta = -self.eokT*3.24
+        muR_IS = self.ideal_sln(y, ISfuncs=ISfuncs)
+
+        Omga = self.get_trode_param("Omega_a")
+        Omgb = self.get_trode_param("Omega_b")
+        Omgc = self.get_trode_param("Omega_c")
+        Omgd = self.get_trode_param("Omega_d")
+
+        muR_enthalpy = Omga + Omgb*y + Omgc*(y**2) + Omgd*(y**3)
+
+        muR = muR_IS + muR_enthalpy
+        actR = np.exp(muR/self.T)
+        muR += muRtheta + muR_ref
+        return muR, actR
+
 
 
     def LiFePO4(self, y, ybar, muR_ref, ISfuncs=None):
@@ -547,7 +564,7 @@ class muRfuncs():
         y1, y2 = y
         # muRtheta2 = -self.eokT*2.59
 
-        muR1homog, actR1 = self.LiAgO_6(y1, ybar, muR_ref, ISfuncs=None)
+        muR1homog, actR1 = self.LiAgO(y1, ybar, muR_ref, ISfuncs=None)
 
         muR2, actR2 = self.LiVO2_ss(y2, ybar, muR_ref, ISfuncs=None)
 
