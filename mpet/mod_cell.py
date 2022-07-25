@@ -195,6 +195,14 @@ class ModCell(dae.daeModel):
                     RHS += -(config["beta"][trode] * (1-config["poros"][trode])
                              * config["P_L"][trode] * Vj
                              * self.particles[trode][vInd,pInd].dcbardt())
+
+                # for pInd in range(Npart[trode]):
+                #     # The volume of this particular particle
+                #     Vj = config["psd_vol_FracVol"][trode][vInd,pInd]
+                #     RHS += -(config["beta"][trode] * (1-config["poros"][trode])
+                #              * config["P_L"][trode] * Vj
+                #              * self.particles[trode][vInd,pInd].dcbardt())
+
                 eq.Residual = self.R_Vp[trode](vInd) - RHS
 
         # Define output port variables

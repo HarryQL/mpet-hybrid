@@ -270,6 +270,46 @@ class muRfuncs():
         # actR = None
         return muR, actR
 
+    def LiCF_ss(self, y, ybar, muR_ref, ISfuncs=None):
+        """
+        CFx (x=1) discharge OCV from Gomadam
+        """
+        b = -0.02
+        c = 6.64598657006137e-06
+        cc =2.12258603268465e-06
+        d = -0.00553346316001277
+        dd =-0.00182420160990677
+        e = 2.54146296708079
+        ee =0.8598721909619
+        f = 5.81715187206634
+        ff =1.63460834212519
+        g =-3.50302948659574
+        gg =0.000616092918954162
+        h = -2.03863850063247
+        hh =-3.81158221764385
+        l = -4.9616107272193
+        ll =3.66430362872806
+        m = -2.15485220570863
+        mm =-3.93194442432665
+        n = -0.708878434759009
+        nn =-2.46912720449879
+        o = -0.214783881560837
+        oo =3.3241731587368
+        p = 5.17109932227109
+        pp = 0.80576977271189
+
+        OCV = b*np.log(y/(1-y)) \
+                +(c+  d*y+  e*(y**2)+ f*(y**3)+  g*(y**4)+  h*(y**5)+  l*(y**6)+  m*(y**7)+  n*(y**8)+  o*(y**9)+  p*(y**10)) \
+                /(cc+dd*y+ee*(y**2)+ ff*(y**3)+ gg*(y**4)+ hh*(y**5)+ ll*(y**6)+ mm*(y**7)+ nn*(y**8)+ oo*(y**9)+ pp*(y**10))
+
+
+
+        muR = self.get_muR_from_OCV(OCV, muR_ref)
+        actR = None
+        # EoKT = constants.e / (constants.k * 310.15)
+        # muR = -EoKT*OCV + muR_ref
+        # actR = None
+        return muR, actR
 
 
     def NCA_ss1(self, y, ybar, muR_ref, ISfuncs=None):
