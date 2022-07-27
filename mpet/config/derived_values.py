@@ -164,16 +164,36 @@ class DerivedValues:
         return constants.k * constants.T_ref \
             / (constants.e * self.config['curr_ref'] * self.config['1C_current_density'])
 
+    def V_corr(self):
+
+        V_ratio_correct = self.config[trode, 'cap_ratio']* (self.config[trode, 'rho_s'] / self.config[trode, 'rho_s2'])
+
+        V_ratio_raw = (self.config["Npart2"]['c'] * (4/3)*np.pi*(self.config["mean2"]['c'] **3))/(self.config["Npart"]['c'] * np.pi * (self.config["mean"]['c'] **2) * self.config['c', 'thickness'])
+
+        V_corr = V_ratio_correct/V_ratio_raw
+
+        return V_corr
+
+
+
     def csmax(self, trode):
         """Maximum concentration for given electrode
         """
-        return self.config[trode, 'rho_s'] / constants.N_A
+        if trode == 'a':
+            return self.config[trode, 'rho_s'] / constants.N_A
+
+        else:
+            V_ratio_correct = self.config[trode, 'cap_ratio']* (self.config[trode, 'rho_s'] / self.config[trode, 'rho_s2'])
+            rho_s_avg = (V_ratio_correct * self.config[trode, 'rho_s2'] + 1 * self.config[trode, 'rho_s'])/(V_ratio_correct + 1)
+            return rho_s_avg / constants.N_A
+        # return self.config[trode, 'rho_s'] / constants.N_A
 
     def cap(self, trode):
         """Theoretical capacity of given electrode
         """
+
         return constants.e * self.config['L'][trode] * (1 - self.config['poros'][trode]) \
-            * self.config['P_L'][trode] * self.config[trode, 'rho_s']
+            * self.config['P_L'][trode] * (self.config[trode, 'csmax'] * constants.N_A)
 
     def numsegments(self):
         """Number of segments in voltage/current profile
@@ -213,11 +233,13 @@ class DerivedValues:
     def cs_ref(self, trode):
         """Reference concentration
         """
-        if self.config[trode, 'type'] in constants.one_var_types:
-            prefac = 1
-        elif self.config[trode, 'type'] in constants.two_var_types:
-            prefac = 1/3
+        # if self.config[trode, 'type'] in constants.one_var_types:
+        #     prefac = 1
+        # elif self.config[trode, 'type'] in constants.two_var_types:
+        #     prefac = 1/3
             # prefac = .5
+        if self.config[trode, 'type'] in constants.two_var_types and self.config[trode, 'type2'] in constants.one_var_types:
+            prefac = (1/3) * (1/1.673368181)
         return prefac * self.config[trode, 'csmax']
 
     def muR_ref(self, trode):

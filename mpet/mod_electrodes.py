@@ -325,20 +325,20 @@ class Mod1var(dae.daeModel):
                                  "discretization domain")
 
         # Variables
-        self.c = dae.daeVariable("c", mole_frac_t, self,
+        self.c3 = dae.daeVariable("c3", mole_frac_t, self,
                                  "Concentration in active particle",
                                  [self.Dmn])
-        self.cbar = dae.daeVariable(
-            "cbar", mole_frac_t, self,
+        self.c3bar = dae.daeVariable(
+            "c3bar", mole_frac_t, self,
             "Average concentration in active particle")
-        self.dcbardt = dae.daeVariable("dcbardt", dae.no_t, self, "Rate of particle filling")
-        if config[trode, "type"] not in ["ACR"]:
-            self.Rxn = dae.daeVariable("Rxn", dae.no_t, self, "Rate of reaction")
+        self.dc3bardt = dae.daeVariable("dc3bardt", dae.no_t, self, "Rate of particle filling")
+        if config[trode, "type2"] not in ["ACR"]:
+            self.Rxn3 = dae.daeVariable("Rxn", dae.no_t, self, "Rate of reaction")
         else:
-            self.Rxn = dae.daeVariable("Rxn", dae.no_t, self, "Rate of reaction", [self.Dmn])
+            self.Rxn3 = dae.daeVariable("Rxn", dae.no_t, self, "Rate of reaction", [self.Dmn])
 
         # Get reaction rate function from dictionary name
-        self.calc_rxn_rate = getattr(reactions, config[trode, "rxnType"])
+        self.calc_rxn_rate = getattr(reactions, config[trode, "rxnType2"])
 
         # Ports
         self.portInLyte = ports.portFromElyte(
@@ -365,71 +365,72 @@ class Mod1var(dae.daeModel):
         dae.daeModel.DeclareEquations(self)
         N = self.get_trode_param("N")  # number of grid points in particle
         T = self.config["T"]  # nondimensional temperature
-        r_vec, volfrac_vec = geo.get_unit_solid_discr(self.get_trode_param('shape'), N)
+        r_vec, volfrac_vec = geo.get_unit_solid_discr(self.get_trode_param('shape2'), N)
 
         # Prepare the Ideal Solution log ratio terms
-        self.ISfuncs = None
+        self.ISfuncs3 = None
         if self.get_trode_param("logPad"):
-            self.ISfuncs = np.array([
-                extern_funcs.LogRatio("LR", self, dae.unit(), self.c(k))
+            self.ISfuncs3 = np.array([
+                extern_funcs.LogRatio("LR3", self, dae.unit(), self.c3(k))
                 for k in range(N)])
 
         # Prepare noise
-        self.noise = None
+        self.noise3 = None
         if self.get_trode_param("noise"):
             numnoise = self.get_trode_param("numnoise")
             noise_prefac = self.get_trode_param("noise_prefac")
             tvec = np.linspace(0., 1.05*self.config["tend"], numnoise)
-            noise_data = noise_prefac*np.random.randn(numnoise, N)
-            self.noise = sintrp.interp1d(tvec, noise_data, axis=0,
+            noise_data3 = noise_prefac*np.random.randn(numnoise, N)
+            self.noise3 = sintrp.interp1d(tvec, noise_data3, axis=0,
                                          bounds_error=False, fill_value=0.)
+
 
         # Figure out mu_O, mu of the oxidized state
         mu_O, act_lyte = calc_mu_O(self.c_lyte(), self.phi_lyte(), self.phi_m(), T,
                                    self.config["elyteModelType"])
 
         # Define average filling fraction in particle
-        eq = self.CreateEquation("cbar")
-        eq.Residual = self.cbar()
+        eq3 = self.CreateEquation("c3bar")
+        eq3.Residual = self.c3bar()
         for k in range(N):
-            eq.Residual -= self.c(k) * volfrac_vec[k]
+            eq3.Residual -= self.c3(k) * volfrac_vec[k]
 
         # Define average rate of filling of particle
-        eq = self.CreateEquation("dcbardt")
-        eq.Residual = self.dcbardt()
+        eq4 = self.CreateEquation("dc3bardt")
+        eq4.Residual = self.dc3bardt()
         for k in range(N):
-            eq.Residual -= self.c.dt(k) * volfrac_vec[k]
+            eq4.Residual -= self.c3.dt(k) * volfrac_vec[k]
 
-        c = np.empty(N, dtype=object)
-        c[:] = [self.c(k) for k in range(N)]
-        if self.get_trode_param("type") in ["ACR", "diffn", "CHR"]:
+        c3 = np.empty(N, dtype=object)
+        c3[:] = [self.c3(k) for k in range(N)]
+        if self.get_trode_param("type2") in ["ACR", "diffn", "CHR"]:
             # Equations for 1D particles of 1 field varible
-            self.sld_dynamics_1D1var(c, mu_O, act_lyte, self.ISfuncs, self.noise)
-        elif self.get_trode_param("type") in ["homog", "homog_sdn"]:
+            self.sld_dynamics_1D1var(c3, mu_O, act_lyte, self.ISfuncs3, self.noise3)
+        elif self.get_trode_param("type2") in ["homog", "homog_sdn"]:
             # Equations for 0D particles of 1 field variables
-            self.sld_dynamics_0D1var(c, mu_O, act_lyte, self.ISfuncs, self.noise)
+            self.sld_dynamics_0D1var(c3, mu_O, act_lyte, self.ISfuncs3, self.noise3)
 
         for eq in self.Equations:
             eq.CheckUnitsConsistency = False
 
-    def sld_dynamics_0D1var(self, c, muO, act_lyte, ISfuncs, noise):
+    def sld_dynamics_0D1var(self, c3, muO, act_lyte, ISfuncs, noise):
         T = self.config["T"]
-        c_surf = c
-        muR_surf, actR_surf = calc_muR(c_surf, self.cbar(), self.config,
+        c_surf = c3
+        mu3R_surf, act3R_surf = calc_muR(c3_surf, self.c3bar(), self.config,
                                        self.trode, self.ind, ISfuncs)
-        eta = calc_eta(muR_surf, muO)
-        eta_eff = eta + self.Rxn()*self.get_trode_param("Rfilm")
+        eta3 = calc_eta(mu3R_surf, muO)
+        eta3_eff = eta3 + self.Rxn3()*self.get_trode_param("Rfilm")
         if self.get_trode_param("noise"):
-            eta_eff += noise[0]()
-        Rxn = self.calc_rxn_rate(
-            eta_eff, c_surf, self.c_lyte(), self.get_trode_param("k0"),
-            self.get_trode_param("E_A"), T, actR_surf, act_lyte,
-            self.get_trode_param("lambda"), self.get_trode_param("alpha"))
-        eq = self.CreateEquation("Rxn")
-        eq.Residual = self.Rxn() - Rxn[0]
+            eta3_eff += noise3[0]()
+        Rxn3 = self.calc_rxn_rate(
+            eta3_eff, c3_surf, self.c_lyte(), self.get_trode_param("k2"),
+            self.get_trode_param("E_A"), T, act3R_surf, act_lyte,
+            self.get_trode_param("lambda"), self.get_trode_param("alpha2"))
+        eq3 = self.CreateEquation("Rxn3")
+        eq3.Residual = self.Rxn3() - (1/5.51528)* Rxn3[0]
 
-        eq = self.CreateEquation("dcsdt")
-        eq.Residual = self.c.dt(0) - self.get_trode_param("delta_L")*self.Rxn()
+        eq3 = self.CreateEquation("dc3sdt")
+        eq3.Residual = self.c3.dt(0) - (1/5.51528)*self.get_trode_param("delta_L")*self.Rxn3()
 
     def sld_dynamics_1D1var(self, c, muO, act_lyte, ISfuncs, noise):
         N = self.get_trode_param("N")

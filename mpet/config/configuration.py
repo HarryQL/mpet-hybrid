@@ -584,8 +584,11 @@ class Config:
 
         for trode in self['trodes']:
             solidType = self[trode, 'type']
+            solidType2 = self[trode, 'type2']
             Nvol = self['Nvol'][trode]
             Npart = self['Npart'][trode]
+            Npart2 = self['Npart2'][trode]
+
 
             # check if PSD is specified. If so, it is an ndarray so use np.all
             if not np.all(self['specified_psd'][trode]):
@@ -593,6 +596,10 @@ class Config:
                 # Log-normally distributed
                 mean = self['mean'][trode]
                 stddev = self['stddev'][trode]
+
+                mean2 = self['mean2'][trode]
+                stddev2 = self['stddev2'][trode]
+
                 if np.allclose(stddev, 0., atol=1e-12):
                     raw = mean * np.ones((Nvol, Npart))
                 else:
@@ -600,6 +607,16 @@ class Config:
                     mu = np.log((mean**2) / np.sqrt(var + mean**2))
                     sigma = np.sqrt(np.log(var/(mean**2) + 1))
                     raw = np.random.lognormal(mu, sigma, size=(Nvol, Npart))
+
+
+                if np.allclose(stddev2, 0., atol=1e-12):
+                    raw2 = mean2 * np.ones((Nvol, Npart2))
+                else:
+                    var2 = stddev2**2
+                    mu2 = np.log((mean2**2) / np.sqrt(var2 + mean2**2))
+                    sigma2 = np.sqrt(np.log(var2/(mean2**2) + 1))
+                    raw2 = np.random.lognormal(mu2, sigma2, size=(Nvol, Npart2))
+
             else:
                 # use user-defined PSD
                 raw = self['specified_psd'][trode]
@@ -625,6 +642,21 @@ class Config:
             else:
                 raise NotImplementedError(f'Unknown solid type: {solidType}')
 
+            if solidType2 in ['ACR']:
+                psd_num2 = np.ceil(raw2 / solidDisc).astype(int)
+                psd_len2 = solidDisc * psd_num2
+            elif solidType2 in ['CHR', 'diffn', 'CHR2', 'diffn2']:
+                psd_num2 = np.ceil(raw2 / solidDisc).astype(int) + 1
+                psd_len2 = solidDisc * (psd_num2 - 1)
+            # For homogeneous particles (only one 'volume' per particle)
+            elif solidType2 in ['homog', 'homog_sdn', 'homog2', 'homog2_sdn','homog2_hybrid']:
+                # Each particle is only one volume
+                psd_num2 = np.ones(raw2.shape, dtype=np.int)
+                # The lengths are given by the original length distr.
+                psd_len2 = raw2
+            else:
+                raise NotImplementedError(f'Unknown solid type: {solidType2}')
+
             # Calculate areas and volumes
             solidShape = self[trode, 'shape']
             if solidShape == 'sphere':
@@ -639,22 +671,42 @@ class Config:
             else:
                 raise NotImplementedError(f'Unknown solid shape: {solidShape}')
 
+            solidShape2 = self[trode, 'shape2']
+            if solidShape2 == 'sphere':
+                psd_area2 = 4 * np.pi * psd_len2**2
+                psd_vol2 = (4. / 3) * np.pi * psd_len2**3
+            elif solidShape2 == 'C3':
+                psd_area2 = 2 * 1.2263 * psd_len2**2
+                psd_vol2 = 1.2263 * psd_len2**2 * self[trode, 'thickness2']
+            elif solidShape2 == 'cylinder':
+                psd_area2 = 2 * np.pi * psd_len2 * self[trode, 'thickness2']
+                psd_vol2 = np.pi * psd_len2**2 * self[trode, 'thickness2']
+            else:
+                raise NotImplementedError(f'Unknown solid shape: {solidShape2}')
+
             # Fraction of individual particle volume compared to total
             # volume of particles _within the simulated electrode
             # volume_
-            psd_frac_vol = psd_vol / psd_vol.sum(axis=1, keepdims=True)
+
+            psd_num_total = np.concatenate((psd_num, psd_num2), axis = 1)
+            psd_len_total = np.concatenate((psd_len, psd_len2), axis = 1)
+            psd_area_total = np.concatenate((psd_area, psd_area2), axis = 1)
+            psd_vol_total = np.concatenate((psd_vol, psd_vol2), axis = 1)
+
+            psd_frac_vol_total = psd_vol_total / psd_vol_total.sum(axis=1, keepdims=True)
 
             # store values to config
-            self['psd_num'][trode] = psd_num
-            self['psd_len'][trode] = psd_len
-            self['psd_area'][trode] = psd_area
-            self['psd_vol'][trode] = psd_vol
-            self['psd_vol_FracVol'][trode] = psd_frac_vol
+            self['psd_num'][trode] = psd_num_total
+            self['psd_len'][trode] = psd_len_total
+            self['psd_area'][trode] = psd_area_total
+            self['psd_vol'][trode] = psd_vol_total
+            self['psd_vol_FracVol'][trode] = psd_frac_vol_total
 
     def _G(self):
         """
         Generate Gibbs free energy distribution and store in config.
         """
+        # no need to change yet if not simulating conductance
         self['G'] = {}
         for trode in self['trodes']:
             Nvol = self['Nvol'][trode]
@@ -680,18 +732,19 @@ class Config:
         for trode in self['trodes']:
             Nvol = self['Nvol'][trode]
             Npart = self['Npart'][trode]
+            Npart2 = self['Npart2'][trode]
             self[trode, 'indvPart'] = {}
 
             # intialize parameters
             for param, dtype in constants.PARAMS_PARTICLE.items():
-                self[trode, 'indvPart'][param] = np.empty((Nvol, Npart), dtype=dtype)
+                self[trode, 'indvPart'][param] = np.empty((Nvol, Npart+Npart2), dtype=dtype)
 
             # reference scales per trode
             cs_ref_part = constants.N_A * self[trode, 'cs_ref']  # part/m^3
 
             # calculate the values for each particle in each volume
             for i in range(Nvol):
-                for j in range(Npart):
+                for j in range(Npart + Npart2):
                     # This specific particle dimensions
                     self[trode, 'indvPart']['N'][i, j] = self['psd_num'][trode][i,j]
                     plen = self['psd_len'][trode][i,j]
@@ -713,6 +766,8 @@ class Config:
                     self[trode, 'indvPart']['k0'][i, j] = self[trode, 'k0'] \
                         / (constants.e * F_s_ref)
                     self[trode, 'indvPart']['k1'][i, j] = self[trode, 'k1'] \
+                        / (constants.e * F_s_ref)
+                    self[trode, 'indvPart']['k2'][i, j] = self[trode, 'k2'] \
                         / (constants.e * F_s_ref)
                     self[trode, 'indvPart']['E_A'][i, j] = self[trode, 'E_A'] \
                         / (constants.k * constants.N_A * constants.T_ref)
