@@ -84,7 +84,7 @@ class SimMPET(dae.daeSimulation):
                         self.m.phi_bulk[tr].SetInitialGuess(i, config["a", "phiRef"])
                     else:  # cathode
                         self.m.phi_bulk[tr].SetInitialGuess(i, phi_cathode)
-                        
+
                     for j in range(Npart[tr]):
                         Nij = config["psd_num"][tr][i,j]
                         part = self.m.particles[tr][i,j]
