@@ -55,6 +55,10 @@ class Mod2var(dae.daeModel):
             "c2bar", mole_frac_t, self,
             "Average concentration in 'layer' 2 of active particle")
         self.dcbardt = dae.daeVariable("dcbardt", dae.no_t, self, "Rate of particle filling")
+        self.dc1bardt = dae.daeVariable("dc1bardt", dae.no_t, self, "Rate of particle's first component filling")
+        self.dc2bardt = dae.daeVariable("dc2bardt", dae.no_t, self, "Rate of particle's second component filling")
+
+
         if self.get_trode_param("type") not in ["ACR2"]:
             self.Rxn1 = dae.daeVariable("Rxn1", dae.no_t, self, "Rate of reaction 1")
             self.Rxn2 = dae.daeVariable("Rxn2", dae.no_t, self, "Rate of reaction 2")
@@ -139,6 +143,16 @@ class Mod2var(dae.daeModel):
         for k in range(N):
             # eq.Residual -= .5*(self.c1.dt(k) + self.c2.dt(k)) * volfrac_vec[k]
             eq.Residual -= (1/3)*(self.c1.dt(k) + 2*self.c2.dt(k)) * volfrac_vec[k]
+
+        eq = self.CreateEquation("dc1bardt")
+        eq.Residual = self.dc1bardt()
+        for k in range(N):
+            eq.Residual -= self.c1.dt(k) * volfrac_vec[k]
+
+        eq = self.CreateEquation("dc2bardt")
+        eq.Residual = self.dc2bardt()
+        for k in range(N):
+            eq.Residual -= self.c2.dt(k) * volfrac_vec[k]
 
 
         c1 = np.empty(N, dtype=object)
@@ -401,6 +415,7 @@ class Mod1var(dae.daeModel):
         for k in range(N):
             eq4.Residual -= self.c3.dt(k) * volfrac_vec[k]
 
+
         c3 = np.empty(N, dtype=object)
         c3[:] = [self.c3(k) for k in range(N)]
         if self.get_trode_param("type2") in ["ACR", "diffn", "CHR"]:
@@ -427,10 +442,10 @@ class Mod1var(dae.daeModel):
             self.get_trode_param("E_A"), T, act3R_surf, act_lyte,
             self.get_trode_param("lambda"), self.get_trode_param("alpha2"))
         eq3 = self.CreateEquation("Rxn3")
-        eq3.Residual = self.Rxn3() - (1/5.51528)* Rxn3[0]
+        eq3.Residual = self.Rxn3() - (1/5.515)* Rxn3[0]
 
         eq3 = self.CreateEquation("dc3sdt")
-        eq3.Residual = self.c3.dt(0) - (1/5.51528)*self.get_trode_param("delta_L")*self.Rxn3()
+        eq3.Residual = self.c3.dt(0) - (1/5.515)*self.get_trode_param("delta_L")*self.Rxn3()
 
     def sld_dynamics_1D1var(self, c, muO, act_lyte, ISfuncs, noise):
         N = self.get_trode_param("N")

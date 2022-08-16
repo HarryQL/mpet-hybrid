@@ -164,15 +164,6 @@ class DerivedValues:
         return constants.k * constants.T_ref \
             / (constants.e * self.config['curr_ref'] * self.config['1C_current_density'])
 
-    def V_corr(self):
-
-        V_ratio_correct = self.config[trode, 'cap_ratio']* (self.config[trode, 'rho_s'] / self.config[trode, 'rho_s2'])
-
-        V_ratio_raw = (self.config["Npart2"]['c'] * (4/3)*np.pi*(self.config["mean2"]['c'] **3))/(self.config["Npart"]['c'] * np.pi * (self.config["mean"]['c'] **2) * self.config['c', 'thickness'])
-
-        V_corr = V_ratio_correct/V_ratio_raw
-
-        return V_corr
 
 
 
@@ -239,8 +230,8 @@ class DerivedValues:
         #     prefac = 1/3
             # prefac = .5
         if self.config[trode, 'type'] in constants.two_var_types and self.config[trode, 'type2'] in constants.one_var_types:
-            prefac = (1/3) * (1/1.673368181)
-        return prefac * self.config[trode, 'csmax']
+            prefac = (1/3)
+        return prefac * (self.config[trode, 'rho_s']/ constants.N_A)
 
     def muR_ref(self, trode):
         """Reference chemical potential of given electrode

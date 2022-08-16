@@ -48,17 +48,26 @@ class SimMPET(dae.daeSimulation):
         if config["have_separator"]:
             self.m.DmnCell["s"].CreateArray(config["Nvol"]["s"])
         for tr in config["trodes"]:
-            self.m.DmnCell[tr].CreateArray(config["Nvol"][tr])
-            self.m.DmnPart[tr].CreateArray(config["Npart"][tr])
-            for i in range(config["Nvol"][tr]):
-                for j in range(config["Npart"][tr]):
-                    self.m.particles[tr][i, j].Dmn.CreateArray(
-                        int(config["psd_num"][tr][i,j]))
+            if tr == 'a':
+                self.m.DmnCell[tr].CreateArray(config["Nvol"][tr])
+                self.m.DmnPart[tr].CreateArray(config["Npart"][tr])
+                for i in range(config["Nvol"][tr]):
+                    for j in range(config["Npart"][tr]):
+                        self.m.particles[tr][i, j].Dmn.CreateArray(
+                            int(config["psd_num"][tr][i,j]))
+            else:
+                self.m.DmnCell[tr].CreateArray(config["Nvol"][tr])
+                self.m.DmnPart[tr].CreateArray(config["Npart"][tr] + config["Npart2"][tr])
+                for i in range(config["Nvol"][tr]):
+                    for j in range(config["Npart"][tr] + config["Npart2"][tr]):
+                        self.m.particles[tr][i, j].Dmn.CreateArray(
+                            int(config["psd_num"][tr][i,j]))
 
     def SetUpVariables(self):
         config = self.config
         Nvol = config["Nvol"]
         Npart = config["Npart"]
+        Npart2 = config["Npart2"]
         phi_cathode = config["phi_cathode"]
         if not config["prevDir"] or config["prevDir"] == "false":
             # Solids
@@ -75,6 +84,7 @@ class SimMPET(dae.daeSimulation):
                         self.m.phi_bulk[tr].SetInitialGuess(i, config["a", "phiRef"])
                     else:  # cathode
                         self.m.phi_bulk[tr].SetInitialGuess(i, phi_cathode)
+                        
                     for j in range(Npart[tr]):
                         Nij = config["psd_num"][tr][i,j]
                         part = self.m.particles[tr][i,j]
@@ -83,9 +93,9 @@ class SimMPET(dae.daeSimulation):
                         # solid concentrations
                         solidType = self.config[tr, "type"]
                         if solidType in constants.one_var_types:
-                            part.cbar.SetInitialGuess(cs0)
+                            part.c3bar.SetInitialGuess(cs0)
                             for k in range(Nij):
-                                part.c.SetInitialCondition(k, cs0)
+                                part.c3.SetInitialCondition(k, cs0)
                         elif solidType in constants.two_var_types:
                             part.c1bar.SetInitialGuess(cs0)
                             part.c2bar.SetInitialGuess(cs0)
@@ -99,6 +109,33 @@ class SimMPET(dae.daeSimulation):
                             for k in range(Nij):
                                 part.c1.SetInitialCondition(k, cs0+rnd1[k])
                                 part.c2.SetInitialCondition(k, cs0+rnd2[k])
+
+                    for j in range(Npart[tr], Npart[tr]+Npart2[tr]):
+                        Nij = config["psd_num"][tr][i,j]
+                        part = self.m.particles[tr][i,j]
+                        # Guess initial value for the average solid
+                        # concentrations and set initial value for
+                        # solid concentrations
+                        solidType2 = self.config[tr, "type2"]
+                        if solidType2 in constants.one_var_types:
+                            part.c3bar.SetInitialGuess(cs0)
+                            for k in range(Nij):
+                                part.c3.SetInitialCondition(k, cs0)
+                        elif solidType2 in constants.two_var_types:
+                            part.c1bar.SetInitialGuess(cs0)
+                            part.c2bar.SetInitialGuess(cs0)
+                            # potentially need to change
+                            part.cbar.SetInitialGuess(cs0)
+                            epsrnd = 0.0001
+                            rnd1 = epsrnd*(np.random.rand(Nij) - 0.5)
+                            rnd2 = epsrnd*(np.random.rand(Nij) - 0.5)
+                            rnd1 -= np.mean(rnd1)
+                            rnd2 -= np.mean(rnd2)
+                            for k in range(Nij):
+                                part.c1.SetInitialCondition(k, cs0+rnd1[k])
+                                part.c2.SetInitialCondition(k, cs0+rnd2[k])
+
+
 
             # Cell potential initialization
             if config['tramp'] > 0:

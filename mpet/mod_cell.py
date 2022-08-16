@@ -35,6 +35,8 @@ class ModCell(dae.daeModel):
         self.profileType = config['profileType']
         Nvol = config["Nvol"]
         Npart = config["Npart"]
+        Npart2 = config["Npart2"]
+
         self.trodes = trodes = config["trodes"]
 
         # Domains where variables are distributed
@@ -125,9 +127,11 @@ class ModCell(dae.daeModel):
         for trode in trodes:
             Nv = Nvol[trode]
             Np = Npart[trode]
+            Np2 = Npart2[trode]
+
             self.portsOutLyte[trode] = np.empty(Nv, dtype=object)
-            self.portsOutBulk[trode] = np.empty((Nv, Np), dtype=object)
-            self.particles[trode] = np.empty((Nv, Np), dtype=object)
+            self.portsOutBulk[trode] = np.empty((Nv, Np+Np2), dtype=object)
+            self.particles[trode] = np.empty((Nv, Np+Np2), dtype=object)
             for vInd in range(Nv):
                 self.portsOutLyte[trode][vInd] = ports.portFromElyte(
                     "portTrode{trode}vol{vInd}".format(trode=trode, vInd=vInd), dae.eOutletPort,
@@ -155,6 +159,29 @@ class ModCell(dae.daeModel):
                     self.ConnectPorts(self.portsOutBulk[trode][vInd,pInd],
                                       self.particles[trode][vInd,pInd].portInBulk)
 
+                for pInd2 in range(Np, Np+Np2):
+                    self.portsOutBulk[trode][vInd,pInd2] = ports.portFromBulk(
+                        "portTrode{trode}vol{vInd}part{pInd2}".format(
+                            trode=trode, vInd=vInd, pInd=pInd2),
+                        dae.eOutletPort, self,
+                        "Bulk electrode port to particles2")
+                    solidType2 = config[trode, "type2"]
+                    if solidType2 in constants.two_var_types:
+                        pMod2 = mod_electrodes.Mod2var
+                    elif solidType2 in constants.one_var_types:
+                        pMod2 = mod_electrodes.Mod1var
+                    else:
+                        raise NotImplementedError("unknown solid type2")
+                    self.particles[trode][vInd,pInd2] = pMod2(
+                        config, trode, vInd, pInd2,
+                        Name="partTrode{trode}vol{vInd}part{pInd2}".format(
+                            trode=trode, vInd=vInd, pInd=pInd2),
+                        Parent=self)
+                    self.ConnectPorts(self.portsOutLyte[trode][vInd],
+                                      self.particles[trode][vInd,pInd2].portInLyte)
+                    self.ConnectPorts(self.portsOutBulk[trode][vInd,pInd2],
+                                      self.particles[trode][vInd,pInd2].portInBulk)
+
     def DeclareEquations(self):
         dae.daeModel.DeclareEquations(self)
 
@@ -163,6 +190,8 @@ class ModCell(dae.daeModel):
         config = self.config
         Nvol = config["Nvol"]
         Npart = config["Npart"]
+        Npart2 = config["Npart2"]
+
         Nlyte = np.sum(list(Nvol.values()))
 
         # Define the overall filling fraction in the electrodes
@@ -175,10 +204,32 @@ class ModCell(dae.daeModel):
             # slower to use Sum(self.psd_vol_ac[l].array([], [])
             tmp = 0
             for vInd in range(Nvol[trode]):
+
+                raw_vol_frac = config["psd_vol_FracVol"][trode][vInd]
+
+                raw_cap_ratio = (np.sum(raw_vol_frac[Npart:]) * config['rho_s2'][trode]) / (np.sum(raw_vol_frac[:Npart]) * config['rho_s'][trode])
+
+                vol_corr_f = config['cap_ratio'][trode] / raw_cap_ratio
+
+                corr_vol_frac = np.concatenate((raw_vol_frac[:Npart], raw_vol_frac[Npart:]* vol_corr_f))
+
+                capa_adj_vol_frac = corr_vol_frac / np.sum(np.concatenate((corr_vol_frac[:Npart] * config['rho_s'][trode], corr_vol_frac[Npart:] * config['rho_s2'][trode])))
+
                 for pInd in range(Npart[trode]):
-                    Vj = config["psd_vol_FracVol"][trode][vInd,pInd]
-                    tmp += self.particles[trode][vInd,pInd].cbar() * Vj * dx
+                    # Vj = config["psd_vol_FracVol"][trode][vInd,pInd]
+                    # tmp += self.particles[trode][vInd,pInd].cbar() * Vj * dx
+                    Vj = capa_adj_vol_frac[pInd]
+                    tmp += ((self.particles[trode][vInd,pInd].c1bar() * (1/3) * config['rho_s'][trode]) + (self.particles[trode][vInd,pInd].c2bar() * (2/3) * config['rho_s'][trode])) * Vj * dx
+
+
+                for pInd2 in range(Npart[trode], Npart[trode]+Npart2[trode]):
+                    Vj = capa_adj_vol_frac[pInd2]
+                    tmp += self.particles[trode][vInd,pInd2].c3bar() * config['rho_s2'][trode] * Vj * dx
+
             eq.Residual -= tmp
+
+
+        # self.particles[trode][vInd,pInd2].c3bar() * Vj * dx
 
         # Define dimensionless R_Vp for each electrode volume
         for trode in trodes:
@@ -188,20 +239,32 @@ class ModCell(dae.daeModel):
                 # Start with no reaction, then add reactions for each
                 # particle in the volume.
                 RHS = 0
+
+                raw_vol_frac = config["psd_vol_FracVol"][trode][vInd]
+
+                raw_cap_ratio = (np.sum(raw_vol_frac[Npart:]) * config['rho_s2'][trode]) / (np.sum(raw_vol_frac[:Npart]) * config['rho_s'][trode])
+
+                vol_corr_f = config['cap_ratio'][trode] / raw_cap_ratio
+
+                corr_vol_frac = np.concatenate((raw_vol_frac[:Npart], raw_vol_frac[Npart:]* vol_corr_f))
+
+                capa_adj_vol_frac = corr_vol_frac / np.sum(np.concatenate((corr_vol_frac[:Npart] * config['rho_s'][trode], corr_vol_frac[Npart:] * config['rho_s2'][trode])))
                 # sum over particle volumes in given electrode volume
                 for pInd in range(Npart[trode]):
                     # The volume of this particular particle
-                    Vj = config["psd_vol_FracVol"][trode][vInd,pInd]
-                    RHS += -(config["beta"][trode] * (1-config["poros"][trode])
-                             * config["P_L"][trode] * Vj
-                             * self.particles[trode][vInd,pInd].dcbardt())
+                    # Vj = config["psd_vol_FracVol"][trode][vInd,pInd]
+                    # RHS += -(config["beta"][trode] * (1-config["poros"][trode])
+                    #          * config["P_L"][trode] * Vj
+                    #          * self.particles[trode][vInd,pInd].dcbardt())
 
-                # for pInd in range(Npart[trode]):
-                #     # The volume of this particular particle
-                #     Vj = config["psd_vol_FracVol"][trode][vInd,pInd]
-                #     RHS += -(config["beta"][trode] * (1-config["poros"][trode])
-                #              * config["P_L"][trode] * Vj
-                #              * self.particles[trode][vInd,pInd].dcbardt())
+                    Vj = capa_adj_vol_frac[pInd]
+                    RHS += -(config["beta"][trode] * (1-config["poros"][trode]) * config["P_L"][trode] * ((1/3) * config['rho_s'][trode]) * Vj * self.particles[trode][vInd,pInd].dc1bardt())
+                    RHS += -(config["beta"][trode] * (1-config["poros"][trode]) * config["P_L"][trode] * ((2/3) * config['rho_s'][trode]) * Vj * self.particles[trode][vInd,pInd].dc2bardt())
+
+                for pInd2 in range(Npart[trode], Npart[trode]+Npart2[trode]):
+
+                    Vj = capa_adj_vol_frac[pInd2]
+                    RHS += -(config["beta"][trode] * (1-config["poros"][trode]) * config["P_L"][trode] * config['rho_s2'][trode] * Vj * self.particles[trode][vInd,pInd2].dc3bardt())
 
                 eq.Residual = self.R_Vp[trode](vInd) - RHS
 
@@ -222,6 +285,13 @@ class ModCell(dae.daeModel):
                             vInd=vInd, pInd=pInd, trode=trode))
                     eq.Residual = (self.phi_part[trode](vInd, pInd)
                                    - self.portsOutBulk[trode][vInd,pInd].phi_m())
+
+                for pInd2 in range(Npart[trode], Npart[trode]+Npart2[trode]):
+                    eq = self.CreateEquation(
+                        "portout_pm_trode{trode}v{vInd}p{pInd2}".format(
+                            vInd=vInd, pInd=pInd2, trode=trode))
+                    eq.Residual = (self.phi_part[trode](vInd, pInd2)
+                                   - self.portsOutBulk[trode][vInd,pInd2].phi_m())
 
             # Simulate the potential drop along the bulk electrode
             # solid phase
@@ -263,7 +333,7 @@ class ModCell(dae.daeModel):
             simPartCond = config['simPartCond'][trode]
             for vInd in range(Nvol[trode]):
                 phi_bulk = self.phi_bulk[trode](vInd)
-                for pInd in range(Npart[trode]):
+                for pInd in range(Npart[trode]+Npart2[trode]):
                     G_l = config["G"][trode][vInd,pInd]
                     phi_n = self.phi_part[trode](vInd, pInd)
                     if pInd == 0:  # reference bulk phi
