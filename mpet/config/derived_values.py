@@ -249,6 +249,7 @@ class DerivedValues:
             raise ValueError(f'Unknown solid type: {solidType}')
         return muR_ref
 
+
     def phiRef(self, trode):
         """Reference electrostatic potential of given electrode
         """

@@ -59,6 +59,7 @@ class muRfuncs():
 
         # Convert "muRfunc" to a callable function
         self.muRfunc = getattr(self, self.get_trode_param("muRfunc"))
+        self.muRfunc2 = getattr(self, self.get_trode_param("muRfunc2"))
 
     def get_trode_param(self, item):
         """

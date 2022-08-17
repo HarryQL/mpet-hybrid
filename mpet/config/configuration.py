@@ -711,15 +711,16 @@ class Config:
         for trode in self['trodes']:
             Nvol = self['Nvol'][trode]
             Npart = self['Npart'][trode]
+            Npart2 = self['Npart2'][trode]
             mean = self['G_mean'][trode]
             stddev = self['G_stddev'][trode]
             if np.allclose(stddev, 0, atol=1e-12):
-                G = mean * np.ones((Nvol, Npart))
+                G = mean * np.ones((Nvol, Npart + Npart2))
             else:
                 var = stddev**2
                 mu = np.log((mean**2) / np.sqrt(var + mean**2))
                 sigma = np.sqrt(np.log(var / (mean**2) + 1))
-                G = np.random.lognormal(mu, sigma, size=(Nvol, Npart))
+                G = np.random.lognormal(mu, sigma, size=(Nvol, Npart + Npart2))
 
             # scale and store
             self['G'][trode] = G * constants.k * constants.T_ref * self['t_ref'] \

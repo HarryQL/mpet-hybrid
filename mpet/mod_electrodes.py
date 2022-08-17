@@ -347,9 +347,9 @@ class Mod1var(dae.daeModel):
             "Average concentration in active particle")
         self.dc3bardt = dae.daeVariable("dc3bardt", dae.no_t, self, "Rate of particle filling")
         if config[trode, "type2"] not in ["ACR"]:
-            self.Rxn3 = dae.daeVariable("Rxn", dae.no_t, self, "Rate of reaction")
+            self.Rxn3 = dae.daeVariable("Rxn3", dae.no_t, self, "Rate of reaction 3")
         else:
-            self.Rxn3 = dae.daeVariable("Rxn", dae.no_t, self, "Rate of reaction", [self.Dmn])
+            self.Rxn3 = dae.daeVariable("Rxn3", dae.no_t, self, "Rate of reaction 3", [self.Dmn])
 
         # Get reaction rate function from dictionary name
         self.calc_rxn_rate = getattr(reactions, config[trode, "rxnType2"])
@@ -430,8 +430,8 @@ class Mod1var(dae.daeModel):
 
     def sld_dynamics_0D1var(self, c3, muO, act_lyte, ISfuncs, noise):
         T = self.config["T"]
-        c_surf = c3
-        mu3R_surf, act3R_surf = calc_muR(c3_surf, self.c3bar(), self.config,
+        c3_surf = c3
+        mu3R_surf, act3R_surf = calc_muR2(c3_surf, self.c3bar(), self.config,
                                        self.trode, self.ind, ISfuncs)
         eta3 = calc_eta(mu3R_surf, muO)
         eta3_eff = eta3 + self.Rxn3()*self.get_trode_param("Rfilm")
@@ -446,6 +446,7 @@ class Mod1var(dae.daeModel):
 
         eq3 = self.CreateEquation("dc3sdt")
         eq3.Residual = self.c3.dt(0) - (1/5.515)*self.get_trode_param("delta_L")*self.Rxn3()
+
 
     def sld_dynamics_1D1var(self, c, muO, act_lyte, ISfuncs, noise):
         N = self.get_trode_param("N")
@@ -604,6 +605,12 @@ def calc_muR(c, cbar, config, trode, ind, ISfuncs=None):
     muR_ref = config[trode, "muR_ref"]
     muR, actR = muRfunc(c, cbar, muR_ref, ISfuncs)
     return muR, actR
+
+def calc_muR2(c, cbar, config, trode, ind, ISfuncs=None):
+    muRfunc2 = props_am.muRfuncs(config, trode, ind).muRfunc2
+    muR_ref = config[trode, "muR_ref"]
+    muR2, actR2 = muRfunc2(c, cbar, muR_ref, ISfuncs)
+    return muR2, actR2
 
 
 def MX(mat, objvec):

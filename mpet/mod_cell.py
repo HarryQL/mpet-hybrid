@@ -161,7 +161,7 @@ class ModCell(dae.daeModel):
 
                 for pInd2 in range(Np, Np+Np2):
                     self.portsOutBulk[trode][vInd,pInd2] = ports.portFromBulk(
-                        "portTrode{trode}vol{vInd}part{pInd2}".format(
+                        "portTrode{trode}vol{vInd}part{pInd}".format(
                             trode=trode, vInd=vInd, pInd=pInd2),
                         dae.eOutletPort, self,
                         "Bulk electrode port to particles2")
@@ -174,7 +174,7 @@ class ModCell(dae.daeModel):
                         raise NotImplementedError("unknown solid type2")
                     self.particles[trode][vInd,pInd2] = pMod2(
                         config, trode, vInd, pInd2,
-                        Name="partTrode{trode}vol{vInd}part{pInd2}".format(
+                        Name="partTrode{trode}vol{vInd}part{pInd}".format(
                             trode=trode, vInd=vInd, pInd=pInd2),
                         Parent=self)
                     self.ConnectPorts(self.portsOutLyte[trode][vInd],
@@ -207,24 +207,24 @@ class ModCell(dae.daeModel):
 
                 raw_vol_frac = config["psd_vol_FracVol"][trode][vInd]
 
-                raw_cap_ratio = (np.sum(raw_vol_frac[Npart:]) * config['rho_s2'][trode]) / (np.sum(raw_vol_frac[:Npart]) * config['rho_s'][trode])
+                raw_cap_ratio = (np.sum(raw_vol_frac[Npart[trode]:]) * config[trode, 'rho_s2']) / (np.sum(raw_vol_frac[:Npart[trode]]) * config[trode, 'rho_s'])
 
-                vol_corr_f = config['cap_ratio'][trode] / raw_cap_ratio
+                vol_corr_f = config[trode, 'cap_ratio'] / raw_cap_ratio
 
-                corr_vol_frac = np.concatenate((raw_vol_frac[:Npart], raw_vol_frac[Npart:]* vol_corr_f))
+                corr_vol_frac = np.concatenate((raw_vol_frac[:Npart[trode]], raw_vol_frac[Npart[trode]:]* vol_corr_f))
 
-                capa_adj_vol_frac = corr_vol_frac / np.sum(np.concatenate((corr_vol_frac[:Npart] * config['rho_s'][trode], corr_vol_frac[Npart:] * config['rho_s2'][trode])))
+                capa_adj_vol_frac = corr_vol_frac / np.sum(np.concatenate((corr_vol_frac[:Npart[trode]] * config[trode, 'rho_s'], corr_vol_frac[Npart[trode]:] * config[trode, 'rho_s2'])))
 
                 for pInd in range(Npart[trode]):
                     # Vj = config["psd_vol_FracVol"][trode][vInd,pInd]
                     # tmp += self.particles[trode][vInd,pInd].cbar() * Vj * dx
                     Vj = capa_adj_vol_frac[pInd]
-                    tmp += ((self.particles[trode][vInd,pInd].c1bar() * (1/3) * config['rho_s'][trode]) + (self.particles[trode][vInd,pInd].c2bar() * (2/3) * config['rho_s'][trode])) * Vj * dx
+                    tmp += ((self.particles[trode][vInd,pInd].c1bar() * (1/3) * config[trode, 'rho_s']) + (self.particles[trode][vInd,pInd].c2bar() * (2/3) * config[trode, 'rho_s'])) * Vj * dx
 
 
                 for pInd2 in range(Npart[trode], Npart[trode]+Npart2[trode]):
                     Vj = capa_adj_vol_frac[pInd2]
-                    tmp += self.particles[trode][vInd,pInd2].c3bar() * config['rho_s2'][trode] * Vj * dx
+                    tmp += self.particles[trode][vInd,pInd2].c3bar() * config[trode, 'rho_s2'] * Vj * dx
 
             eq.Residual -= tmp
 
@@ -242,13 +242,13 @@ class ModCell(dae.daeModel):
 
                 raw_vol_frac = config["psd_vol_FracVol"][trode][vInd]
 
-                raw_cap_ratio = (np.sum(raw_vol_frac[Npart:]) * config['rho_s2'][trode]) / (np.sum(raw_vol_frac[:Npart]) * config['rho_s'][trode])
+                raw_cap_ratio = (np.sum(raw_vol_frac[Npart[trode]:]) * config[trode, 'rho_s2']) / (np.sum(raw_vol_frac[:Npart[trode]]) * config[trode, 'rho_s'])
 
-                vol_corr_f = config['cap_ratio'][trode] / raw_cap_ratio
+                vol_corr_f = config[trode, 'cap_ratio'] / raw_cap_ratio
 
-                corr_vol_frac = np.concatenate((raw_vol_frac[:Npart], raw_vol_frac[Npart:]* vol_corr_f))
+                corr_vol_frac = np.concatenate((raw_vol_frac[:Npart[trode]], raw_vol_frac[Npart[trode]:]* vol_corr_f))
 
-                capa_adj_vol_frac = corr_vol_frac / np.sum(np.concatenate((corr_vol_frac[:Npart] * config['rho_s'][trode], corr_vol_frac[Npart:] * config['rho_s2'][trode])))
+                capa_adj_vol_frac = corr_vol_frac / np.sum(np.concatenate((corr_vol_frac[:Npart[trode]] * config[trode, 'rho_s'], corr_vol_frac[Npart[trode]:] * config[trode, 'rho_s2'])))
                 # sum over particle volumes in given electrode volume
                 for pInd in range(Npart[trode]):
                     # The volume of this particular particle
@@ -258,13 +258,13 @@ class ModCell(dae.daeModel):
                     #          * self.particles[trode][vInd,pInd].dcbardt())
 
                     Vj = capa_adj_vol_frac[pInd]
-                    RHS += -(config["beta"][trode] * (1-config["poros"][trode]) * config["P_L"][trode] * ((1/3) * config['rho_s'][trode]) * Vj * self.particles[trode][vInd,pInd].dc1bardt())
-                    RHS += -(config["beta"][trode] * (1-config["poros"][trode]) * config["P_L"][trode] * ((2/3) * config['rho_s'][trode]) * Vj * self.particles[trode][vInd,pInd].dc2bardt())
+                    RHS += -(config["beta"][trode] * (1-config["poros"][trode]) * config["P_L"][trode] * ((1/3) * config[trode, 'rho_s']) * Vj * self.particles[trode][vInd,pInd].dc1bardt())
+                    RHS += -(config["beta"][trode] * (1-config["poros"][trode]) * config["P_L"][trode] * ((2/3) * config[trode, 'rho_s']) * Vj * self.particles[trode][vInd,pInd].dc2bardt())
 
                 for pInd2 in range(Npart[trode], Npart[trode]+Npart2[trode]):
 
                     Vj = capa_adj_vol_frac[pInd2]
-                    RHS += -(config["beta"][trode] * (1-config["poros"][trode]) * config["P_L"][trode] * config['rho_s2'][trode] * Vj * self.particles[trode][vInd,pInd2].dc3bardt())
+                    RHS += -(config["beta"][trode] * (1-config["poros"][trode]) * config["P_L"][trode] * config[trode, 'rho_s2'] * Vj * self.particles[trode][vInd,pInd2].dc3bardt())
 
                 eq.Residual = self.R_Vp[trode](vInd) - RHS
 
@@ -288,7 +288,7 @@ class ModCell(dae.daeModel):
 
                 for pInd2 in range(Npart[trode], Npart[trode]+Npart2[trode]):
                     eq = self.CreateEquation(
-                        "portout_pm_trode{trode}v{vInd}p{pInd2}".format(
+                        "portout_pm_trode{trode}v{vInd}p{pInd}".format(
                             vInd=vInd, pInd=pInd2, trode=trode))
                     eq.Residual = (self.phi_part[trode](vInd, pInd2)
                                    - self.portsOutBulk[trode][vInd,pInd2].phi_m())
@@ -340,7 +340,7 @@ class ModCell(dae.daeModel):
                         phi_l = phi_bulk
                     else:
                         phi_l = self.phi_part[trode](vInd, pInd-1)
-                    if pInd == (Npart[trode] - 1):  # No particle at end of "chain"
+                    if pInd == (Npart[trode]+Npart2[trode] - 1):  # No particle at end of "chain"
                         G_r = 0
                         phi_r = phi_n
                     else:
