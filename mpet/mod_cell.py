@@ -207,13 +207,15 @@ class ModCell(dae.daeModel):
 
                 raw_vol_frac = config["psd_vol_FracVol"][trode][vInd]
 
-                raw_cap_ratio = (np.sum(raw_vol_frac[Npart[trode]:]) * config[trode, 'rho_s2']) / (np.sum(raw_vol_frac[:Npart[trode]]) * config[trode, 'rho_s'])
+                # raw_cap_ratio = (np.sum(raw_vol_frac[Npart[trode]:]) * config[trode, 'rho_s2']) / (np.sum(raw_vol_frac[:Npart[trode]]) * config[trode, 'rho_s'])
+                raw_cap_ratio = (np.sum(raw_vol_frac[Npart[trode]:]) * config[trode, 'rho_s2'] * 0.91) / (np.sum(raw_vol_frac[:Npart[trode]]) * config[trode, 'rho_s'])
 
                 vol_corr_f = config[trode, 'cap_ratio'] / raw_cap_ratio
 
                 corr_vol_frac = np.concatenate((raw_vol_frac[:Npart[trode]], raw_vol_frac[Npart[trode]:]* vol_corr_f))
 
-                capa_adj_vol_frac = corr_vol_frac / np.sum(np.concatenate((corr_vol_frac[:Npart[trode]] * config[trode, 'rho_s'], corr_vol_frac[Npart[trode]:] * config[trode, 'rho_s2'])))
+                # capa_adj_vol_frac = corr_vol_frac / np.sum(np.concatenate((corr_vol_frac[:Npart[trode]] * config[trode, 'rho_s'], corr_vol_frac[Npart[trode]:] * config[trode, 'rho_s2'])))
+                capa_adj_vol_frac = corr_vol_frac / np.sum(np.concatenate((corr_vol_frac[:Npart[trode]] * config[trode, 'rho_s'], corr_vol_frac[Npart[trode]:] * config[trode, 'rho_s2'] * 0.91)))
 
                 for pInd in range(Npart[trode]):
                     # Vj = config["psd_vol_FracVol"][trode][vInd,pInd]
@@ -240,15 +242,16 @@ class ModCell(dae.daeModel):
                 # particle in the volume.
                 RHS = 0
 
-                raw_vol_frac = config["psd_vol_FracVol"][trode][vInd]
-
-                raw_cap_ratio = (np.sum(raw_vol_frac[Npart[trode]:]) * config[trode, 'rho_s2']) / (np.sum(raw_vol_frac[:Npart[trode]]) * config[trode, 'rho_s'])
+                # raw_cap_ratio = (np.sum(raw_vol_frac[Npart[trode]:]) * config[trode, 'rho_s2']) / (np.sum(raw_vol_frac[:Npart[trode]]) * config[trode, 'rho_s'])
+                raw_cap_ratio = (np.sum(raw_vol_frac[Npart[trode]:]) * config[trode, 'rho_s2'] * 0.91) / (np.sum(raw_vol_frac[:Npart[trode]]) * config[trode, 'rho_s'])
 
                 vol_corr_f = config[trode, 'cap_ratio'] / raw_cap_ratio
 
                 corr_vol_frac = np.concatenate((raw_vol_frac[:Npart[trode]], raw_vol_frac[Npart[trode]:]* vol_corr_f))
 
-                capa_adj_vol_frac = corr_vol_frac / np.sum(np.concatenate((corr_vol_frac[:Npart[trode]] * config[trode, 'rho_s'], corr_vol_frac[Npart[trode]:] * config[trode, 'rho_s2'])))
+                # capa_adj_vol_frac = corr_vol_frac / np.sum(np.concatenate((corr_vol_frac[:Npart[trode]] * config[trode, 'rho_s'], corr_vol_frac[Npart[trode]:] * config[trode, 'rho_s2'])))
+                capa_adj_vol_frac = corr_vol_frac / np.sum(np.concatenate((corr_vol_frac[:Npart[trode]] * config[trode, 'rho_s'], corr_vol_frac[Npart[trode]:] * config[trode, 'rho_s2'] * 0.91)))
+
                 # sum over particle volumes in given electrode volume
                 for pInd in range(Npart[trode]):
                     # The volume of this particular particle

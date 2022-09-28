@@ -214,6 +214,44 @@ class SimMPET(dae.daeSimulation):
                                     k, data[partStr + "c1"][-1,k])
                                 part.c2.SetInitialCondition(
                                     k, data[partStr + "c2"][-1,k])
+
+                    for j in range(Npart[tr], Npart[tr]+Npart2[tr]):
+                        Nij = config["psd_num"][tr][i,j]
+                        part = self.m.particles[tr][i,j]
+                        solidType2 = self.config[tr, "type2"]
+                        partStr = "partTrode{l}vol{i}part{j}_".format(
+                            l=tr, i=i, j=j)
+                            # part2Str = "partTrode2{l}vol{i}part{j}_".format(
+                            #     l=tr, i=i, j=j)
+
+
+                        # Set the inlet port variables for each particle
+                        part.c_lyte.SetInitialGuess(data["c_lyte_" + tr][-1,i])
+                        part.phi_lyte.SetInitialGuess(data["phi_lyte_" + tr][-1,i])
+                        part.phi_m.SetInitialGuess(data["phi_bulk_" + tr][-1,i])
+
+                        if solidType2 in constants.one_var_types:
+                            part.c3bar.SetInitialGuess(
+                                utils.get_dict_key(data, partStr + "c3bar", final=True))
+                            for k in range(Nij):
+                                part.c3.SetInitialCondition(
+                                    k, data[partStr + "c3"][-1,k])
+                        elif solidType2 in constants.two_var_types:
+                            part.c1bar.SetInitialGuess(
+                                utils.get_dict_key(data, partStr + "c1bar", final=True))
+                            part.c2bar.SetInitialGuess(
+                                utils.get_dict_key(data, partStr + "c2bar", final=True))
+                            part.cbar.SetInitialGuess(
+                                utils.get_dict_key(data, partStr + "cbar", final=True))
+                            for k in range(Nij):
+                                part.c1.SetInitialCondition(
+                                    k, data[partStr + "c1"][-1,k])
+                                part.c2.SetInitialCondition(
+                                    k, data[partStr + "c2"][-1,k])
+
+
+
+
             if config["have_separator"]:
                 for i in range(Nvol["s"]):
                     self.m.c_lyte["s"].SetInitialCondition(

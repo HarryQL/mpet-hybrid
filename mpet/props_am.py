@@ -312,6 +312,60 @@ class muRfuncs():
         # actR = None
         return muR, actR
 
+    def LiCF2_ss(self, y, ybar, muR_ref, ISfuncs=None):
+        """
+        CFx (x=1) discharge OCV from Gomadam
+        """
+        b = -0.02
+        c = -4.14639585277983e-07
+        cc = -1.68721890317438e-06
+        d = 0.0600539082629088
+        dd = 0.0207303415063955
+        e = 2.18701626123853
+        ee = 0.717550319820223
+        f = -1.37732821051454
+        ff = -0.488765757256375
+        g = -0.478977238048069
+        gg = -0.164137424184735
+        h = -1.31167352341344
+        hh = -0.026312377902526
+        l = -0.606919331393176
+        ll = -0.692372665120114
+        m = -0.0519265218115834
+        mm = -0.315412340050245
+        n = -0.102424920148515
+        nn = 0.421979431767184
+        o = 0.561841248734846
+        oo = 0.51602268062699
+        p = 1.27473684931705
+        pp = 0.0524058323859283
+
+        OCV = b*np.log(y/(1-y)) \
+                +(c+  d*y+  e*(y**2)+ f*(y**3)+  g*(y**4)+  h*(y**5)+  l*(y**6)+  m*(y**7)+  n*(y**8)+  o*(y**9)+  p*(y**10)) \
+                /(cc+dd*y+ee*(y**2)+ ff*(y**3)+ gg*(y**4)+ hh*(y**5)+ ll*(y**6)+ mm*(y**7)+ nn*(y**8)+ oo*(y**9)+ pp*(y**10))
+
+        muR = self.get_muR_from_OCV(OCV, muR_ref)
+        actR = None
+        # EoKT = constants.e / (constants.k * 310.15)
+        # muR = -EoKT*OCV + muR_ref
+        # actR = None
+        return muR, actR
+
+    def LiCF3_ss(self, y, ybar, muR_ref, ISfuncs=None):
+        """
+        CFx (x=1) discharge OCV from Gomadam
+        """
+        bra = -0.5508820669 + (5.566158288-1476.163146*y + 240126.5532*(y**2)-110008.0909*(y**3)-168834.5645*(y**4)) \
+                          /(1-404.0847731*y + 75655.38173*(y**2)-32080.42547*(y**3)-55461.3021*(y**4))
+
+        OCV = 0.02+ 0.08*(0.3-y)+bra - (1/0.57)*((310.15*1.38e-23)/(1.602e-19))*np.log((3*1.908/(10e-6*2.75e6)) * 5e-4 * y * (1-y)**(1/3))
+        muR = self.get_muR_from_OCV(OCV, muR_ref)
+        actR = None
+        # EoKT = constants.e / (constants.k * 310.15)
+        # muR = -EoKT*OCV + muR_ref
+        # actR = None
+        return muR, actR
+
 
     def NCA_ss1(self, y, ybar, muR_ref, ISfuncs=None):
         """

@@ -75,8 +75,8 @@ bulkpHdr = ("Bulk electrode electric potential [V]\n" + RowsStr + bulkpHdrP2)
 fnameBulkpBase = "bulkPot{l}Data.txt"
 
 
-def main(indir, genData=True, discData=True, elyteData=True,
-         csldData=True, cbarData=True, bulkpData=True):
+def main(indir, genData=True, discData=False, elyteData=False,
+         csldData=False, cbarData=False, bulkpData=False):
     config = plot_data.show_data(
         indir, plot_type="params", print_flag=False, save_flag=False,
         data_only=True)
@@ -222,33 +222,6 @@ def main(indir, genData=True, discData=True, elyteData=True,
                         np.savetxt(os.path.join(indir, filename), datay,
                                    delimiter=dlm, header=solHdr)
 
-            type2c = False
-            if config[tr, "type2"] in constants.one_var_types:
-                str_base2 = partStr + "c"
-            elif config[tr, "type2"] in constants.two_var_types:
-                type2c = True
-                str1_base2 = partStr + "c1"
-                str2_base2 = partStr + "c2"
-            for i in range(config["Npart"][tr], config["Npart"][tr] + config["Npart2"][tr]):
-                for j in range(config["Nvol"][tr]):
-                    if type2c:
-                        sol1 = str1_base2.format(l=tr, i=i, j=j)
-                        sol2 = str2_base2.format(l=tr, i=i, j=j)
-                        datay1 = utils.get_dict_key(data, sol1)
-                        datay2 = utils.get_dict_key(data, sol2)
-                        filename1 = fnameSol1Base.format(l=Trode, i=i, j=j)
-                        filename2 = fnameSol2Base.format(l=Trode, i=i, j=j)
-                        np.savetxt(os.path.join(indir, filename1), datay1,
-                                   delimiter=dlm, header=sol1Hdr)
-                        np.savetxt(os.path.join(indir, filename2), datay2,
-                                   delimiter=dlm, header=sol2Hdr)
-                    else:
-                        sol = str_base2.format(l=tr, i=i, j=j)
-                        datay = utils.get_dict_key(data, sol)
-                        filename = fnameSolBase.format(l=Trode, i=i, j=j)
-                        np.savetxt(os.path.join(indir, filename), datay,
-                                   delimiter=dlm, header=solHdr)
-
         # close file if it is a h5py file
         if isinstance(data, h5py._hl.files.File):
             data.close()
@@ -260,13 +233,13 @@ def main(indir, genData=True, discData=True, elyteData=True,
         for tr in trodes:
             Trode = get_trode_str(tr)
             fname = "cbar{l}Data.txt".format(l=Trode)
-            Nv, Np, Np2 = config["Nvol"][tr], config["Npart"][tr], config["Npart2"][tr]
-            NpartTot = Nv*(Np+Np2)
+            Nv, Np = config["Nvol"][tr], config["Npart"][tr]
+            NpartTot = Nv*Np
             cbarMat = np.zeros((ntimes, NpartTot))
             cbarHdr = cbarHdrBase
             partInd = 0
             for i in range(Nv):
-                for j in range(Np+Np2):
+                for j in range(Np):
                     cbarHdr += "{i}/{j},".format(j=j, i=i)
                     cbarMat[:,partInd] = cbarDict[tr][:,i,j]
                     partInd += 1

@@ -54,7 +54,7 @@ def BV_SVO_hybrid(eta1, eta2, c_sld1, c_sld2, c_lyte, k0, k1, E_A, T, act_R=None
 
 def Tafel_CF(eta, c_sld, c_lyte, k0, E_A, T, act_R=None,
            act_lyte=None, lmbda=None, alpha=None):
-    Rate = k0 * (1-c_sld)**(2/3) * np.exp(-alpha*eta/T)
+    Rate = k0 * c_sld * (1-c_sld)**(1/3 + 2/3) * np.exp(-alpha*eta/T)
     return Rate
 
 

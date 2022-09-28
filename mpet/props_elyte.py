@@ -125,7 +125,7 @@ def valoen_reimers():
 
     def D(c, T):
         return (
-            10**(-4) * 10**(-4.43 - 54/((T*constants.T_ref) - (229 + 5*c)) - 0.22*c))  # m^2/s
+            10**(-4) * 10**(-4.43 - 54/((T*constants.T_ref) - (229 + 5*c)) - 0.22*c)) *1.8  # m^2/s
 
     def therm_fac(c, T):
         tmp = 0.601 - 0.24*c**(0.5) + 0.982*(1 - 0.0052*((T*constants.T_ref) - 294))*c**(1.5)
@@ -171,7 +171,7 @@ def valoen_bernardi():
         out = c * (k00 + k01*(T*constants.T_ref) + k02*(T*constants.T_ref)**2
                    + k10*c + k11*c*(T*constants.T_ref) + k12*c*(T*constants.T_ref)**2
                    + k20*c**2 + k21*c**2*(T*constants.T_ref))**2  # mS/cm
-        out *= 0.1  # S/m
+        out *= 0.1 * 1  # S/m
         return out
 
     def sigma_ndim(c, T):
